@@ -10,6 +10,40 @@ export interface Transport {
   remove(collection: string, id: string): Promise<void>;
 }
 
+export interface RestTransportOptions {
+  apiBasePath?: string;
+}
+
+export function restTransport({
+  apiBasePath = "/api/admin",
+}: RestTransportOptions = {}): Transport {
+  const url = (collection: string, id: string) =>
+    `${apiBasePath}/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`;
+
+  return {
+    async save(collection, id, item) {
+      const res = await fetch(url(collection, id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) throw new Error("Failed to save item");
+    },
+    async patch(collection, id, partial) {
+      const res = await fetch(url(collection, id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(partial),
+      });
+      if (!res.ok) throw new Error("Failed to update item");
+    },
+    async remove(collection, id) {
+      const res = await fetch(url(collection, id), { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete item");
+    },
+  };
+}
+
 export interface InMemoryTransport extends Transport {
   get(collection: string, id: string): Item | undefined;
   list(collection: string): Item[];

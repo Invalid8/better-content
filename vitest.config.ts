@@ -10,6 +10,9 @@ export default defineConfig({
       "better-content/react": fileURLToPath(
         new URL("./src/react/index.ts", import.meta.url),
       ),
+      "better-content/server": fileURLToPath(
+        new URL("./src/server/index.ts", import.meta.url),
+      ),
     },
   },
 });

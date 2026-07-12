@@ -22,6 +22,7 @@ export default defineConfig([
     entry: {
       index: "src/index.ts",
       core: "src/core/index.ts",
+      server: "src/server/index.ts",
     },
     clean: true,
   },

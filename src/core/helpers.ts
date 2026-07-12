@@ -1,5 +1,11 @@
+import type { QueryCondition, QueryFilterGroup } from "./types";
+
 export const dirtyKey = (collection: string, id: string) =>
   `${collection}:${id}`;
+
+export function isFilterGroup(c: QueryCondition): c is QueryFilterGroup {
+  return typeof c === "object" && c !== null && "or" in c;
+}
 
 export function getPath(obj: unknown, path: string): unknown {
   let current: unknown = obj;

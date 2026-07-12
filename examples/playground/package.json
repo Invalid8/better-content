@@ -4,11 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm --prefix ../.. run build",
     "dev": "vite",
+    "prebuild": "npm --prefix ../.. run build",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "better-content": "file:../..",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

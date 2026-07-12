@@ -1,4 +1,5 @@
-import { inMemoryTransport } from "better-content/core";
+import { useEffect, useState } from "react";
+import { restTransport, type Item, type ItemMap } from "better-content/core";
 import {
   AnonymousEditProvider,
   ContentEditSpan,
@@ -7,9 +8,9 @@ import {
   usePageContext,
 } from "better-content/react";
 
-const transport = inMemoryTransport();
+const transport = restTransport();
 
-const initialItems = {
+const defaultItems: ItemMap = {
   sections: [
     {
       id: "hero",
@@ -56,6 +57,19 @@ function Hero() {
 }
 
 export default function App() {
+  const [initialItems, setInitialItems] = useState<ItemMap | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/sections/hero")
+      .then((res) => (res.ok ? (res.json() as Promise<Item>) : null))
+      .then((item) =>
+        setInitialItems(item ? { sections: [item] } : defaultItems),
+      )
+      .catch(() => setInitialItems(defaultItems));
+  }, []);
+
+  if (!initialItems) return null;
+
   return (
     <AnonymousEditProvider>
       <PageProvider transport={transport} initialItems={initialItems}>

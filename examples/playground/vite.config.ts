@@ -1,9 +1,10 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { cmsDevServer } from "./cmsDevPlugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cmsDevServer()],
   resolve: {
     alias: {
       "better-content/core": fileURLToPath(
