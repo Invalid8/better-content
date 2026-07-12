@@ -1,6 +1,16 @@
 export const dirtyKey = (collection: string, id: string) =>
   `${collection}:${id}`;
 
+export function getPath(obj: unknown, path: string): unknown {
+  let current: unknown = obj;
+  for (const key of path.split(".")) {
+    if (current == null) return undefined;
+    current = (current as Record<string, unknown>)[key];
+    if (current === undefined) return undefined;
+  }
+  return current;
+}
+
 export function setPath(
   obj: Record<string, unknown>,
   fieldKey: string,

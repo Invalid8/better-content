@@ -1,14 +1,9 @@
-import { defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 
-export default defineConfig({
-  entry: {
-    index: "src/index.ts",
-    core: "src/core/index.ts",
-  },
+const shared: Options = {
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,
-  clean: true,
   external: [
     /^better-content(\/.+)?$/,
     /^drizzle-orm(\/.+)?$/,
@@ -19,4 +14,23 @@ export default defineConfig({
     /^react(\/.+)?$/,
     /^react-dom(\/.+)?$/,
   ],
-});
+};
+
+export default defineConfig([
+  {
+    ...shared,
+    entry: {
+      index: "src/index.ts",
+      core: "src/core/index.ts",
+    },
+    clean: true,
+  },
+  {
+    ...shared,
+    entry: {
+      react: "src/react/index.ts",
+    },
+    banner: { js: '"use client";' },
+    clean: false,
+  },
+]);

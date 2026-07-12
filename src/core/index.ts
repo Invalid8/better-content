@@ -1,12 +1,13 @@
 export type {
   ClientStorageAdapter,
+  CmsAuthState,
   Editable,
   EntityAddress,
   Item,
   ItemMap,
   PendingImage,
 } from "./types";
-export { dirtyKey, setPath } from "./helpers";
+export { dirtyKey, getPath, setPath } from "./helpers";
 export { consoleNotifier, type Notifier } from "./notifier";
 export {
   inMemoryTransport,

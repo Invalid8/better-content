@@ -21,3 +21,9 @@ export interface PendingImage {
 export interface ClientStorageAdapter {
   upload(file: File): Promise<{ url: string }>;
 }
+
+export interface CmsAuthState {
+  isAdmin: boolean;
+  isEditing: boolean;
+  toggleEdit: () => void;
+}
