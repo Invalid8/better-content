@@ -7,11 +7,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "paths": {
-      "better-content/core": ["../../src/core/index.ts"],
-      "better-content/react": ["../../src/react/index.ts"]
-    }
+    "noEmit": true
   },
   "include": ["src", "vite.config.ts"]
 }
