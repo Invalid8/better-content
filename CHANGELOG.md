@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-14
+
 ### Added
 
 - `adapterTransport(dataAdapter)` in `better-content/core` — drive the engine
@@ -18,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PostgresDataAdapter` no longer imports `node:crypto`, making it usable in
   browser builds (e.g. against PGlite); `create()` falls back to a
   timestamp-based id where `crypto.randomUUID` is unavailable.
+- `ContentEditSpan` keeps focused `contentEditable` drafts DOM-owned so typing
+  preserves caret order and commits the edited text on blur.
 
 ## [0.1.0] - 2026-07-13
 
@@ -49,3 +53,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   401 `{ logout: true }`.
 
 [0.1.0]: https://github.com/Invalid8/better-content/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Invalid8/better-content/releases/tag/v0.1.1
