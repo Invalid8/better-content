@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ElementType,
@@ -89,53 +90,50 @@ function EditableContentSpan({
   const [isFocused, setIsFocused] = useState(false);
   const [editValue, setEditValue] = useState(raw);
   const contentRef = useRef<HTMLElement>(null);
-  const rawRef = useRef(raw);
+  const draftRef = useRef(raw);
 
   useEffect(() => {
-    if (!isFocused && rawRef.current !== raw) {
-      rawRef.current = raw;
+    if (!isFocused && editValue !== raw) {
+      setEditValue(raw);
+      draftRef.current = raw;
     }
-  }, [raw, isFocused]);
+  }, [raw, isFocused, editValue]);
 
-  useEffect(() => {
-    if (!isFocused && rawRef.current !== editValue) {
-      setEditValue(rawRef.current);
-    }
-  }, [isFocused, editValue]);
+  useLayoutEffect(() => {
+    if (!isFocused || !contentRef.current) return;
+    contentRef.current.textContent = draftRef.current;
+
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(contentRef.current);
+    range.collapse(false);
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }, [isFocused]);
 
   const handleInput = useCallback(() => {
     if (contentRef.current) {
-      setEditValue(contentRef.current.textContent || "");
+      draftRef.current = contentRef.current.textContent || "";
     }
   }, []);
 
   const handleBlur = useCallback(() => {
+    const next = contentRef.current?.textContent ?? draftRef.current;
+    draftRef.current = next;
+    setEditValue(next);
     setIsFocused(false);
-    if (editValue !== raw) {
-      editField(collection, itemId, fieldKey, editValue);
+    if (next !== raw) {
+      editField(collection, itemId, fieldKey, next);
     }
-  }, [editValue, raw, collection, itemId, fieldKey, editField]);
+  }, [raw, collection, itemId, fieldKey, editField]);
 
   const handleFocus = useCallback(() => {
+    draftRef.current = editValue;
     setIsFocused(true);
-    if (contentRef.current) {
-      contentRef.current.textContent = editValue;
-      setTimeout(() => {
-        if (contentRef.current) {
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.selectNodeContents(contentRef.current);
-          range.collapse(false);
-          sel?.removeAllRanges();
-          sel?.addRange(range);
-        }
-      }, 0);
-    }
   }, [editValue]);
 
   return (
     <Component
-      key={isFocused ? "editing" : "static"}
       ref={contentRef}
       className={className}
       data-cms-editable=""
