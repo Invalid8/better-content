@@ -23,6 +23,7 @@ export default defineConfig([
       index: "src/index.ts",
       core: "src/core/index.ts",
       server: "src/server/index.ts",
+      "adapters/postgres": "src/adapters/postgres/index.ts",
     },
     clean: true,
   },

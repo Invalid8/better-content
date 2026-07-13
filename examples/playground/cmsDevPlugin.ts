@@ -1,53 +1,43 @@
 import type { Connect, Plugin } from "vite";
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createCmsHandlers } from "better-content/server";
-import type { DataAdapter, Item } from "better-content/core";
+import { PostgresDataAdapter } from "better-content/adapters/postgres";
 
-const store = new Map<string, Map<string, Item>>();
-
-const table = (collection: string) => {
-  let t = store.get(collection);
-  if (!t) {
-    t = new Map();
-    store.set(collection, t);
-  }
-  return t;
-};
-
-const data: DataAdapter = {
-  async fetchCollection(collection) {
-    return [...table(collection).values()] as never;
-  },
-  async fetchById(collection, id) {
-    return (table(collection).get(id) ?? null) as never;
-  },
-  async create(collection, body) {
-    const id = crypto.randomUUID();
-    const item = { ...(body as object), id } as Item;
-    table(collection).set(id, item);
-    return item as never;
-  },
-  async createWithId(collection, id, body) {
-    const item = { ...(body as object), id } as Item;
-    table(collection).set(id, item);
-    return item as never;
-  },
-  async update(collection, id, patch) {
-    const existing = table(collection).get(id);
-    if (!existing) throw new Error(`No item ${collection}/${id}`);
-    table(collection).set(id, { ...existing, ...(patch as object), id });
-  },
-  async upsert(collection, id, body) {
-    table(collection).set(id, { ...(body as object), id } as Item);
-  },
-  async delete(collection, id) {
-    table(collection).delete(id);
-  },
-};
-
-const handlers = createCmsHandlers({
-  data,
-  auth: { verifyRequest: async () => ({ isAdmin: true }) },
+const sections = pgTable("sections", {
+  id: text("id").primaryKey(),
+  heading: text("heading"),
+  tagline: text("tagline"),
+  order: integer("order"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
+const schema = { sections };
+
+const DDL = `
+  CREATE TABLE IF NOT EXISTS sections (
+    id         text PRIMARY KEY,
+    heading    text,
+    tagline    text,
+    "order"    integer,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+  );
+`;
+
+const ready = (async () => {
+  const client = new PGlite();
+  await client.exec(DDL);
+  const data = new PostgresDataAdapter({
+    db: drizzle(client, { schema }) as never,
+    schema,
+  });
+  return createCmsHandlers({
+    data,
+    auth: { verifyRequest: async () => ({ isAdmin: true }) },
+  });
+})();
 
 async function readBody(req: Connect.IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
@@ -61,6 +51,7 @@ export function cmsDevServer(): Plugin {
     configureServer(server) {
       server.middlewares.use("/api/admin", (req, res) => {
         void (async () => {
+          const handlers = await ready;
           const segments = (req.url ?? "")
             .split("?")[0]!
             .split("/")
