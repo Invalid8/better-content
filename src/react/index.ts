@@ -15,3 +15,8 @@ export {
   ContentEditSpan,
   type ContentEditSpanProps,
 } from "./ContentEditSpan";
+export {
+  EditableImage,
+  type EditableImageProps,
+  type EditableImageRenderState,
+} from "./EditableImage";

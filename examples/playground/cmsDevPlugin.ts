@@ -9,6 +9,7 @@ const sections = pgTable("sections", {
   id: text("id").primaryKey(),
   heading: text("heading"),
   tagline: text("tagline"),
+  cover: text("cover"),
   order: integer("order"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
@@ -20,6 +21,7 @@ const DDL = `
     id         text PRIMARY KEY,
     heading    text,
     tagline    text,
+    cover      text,
     "order"    integer,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()

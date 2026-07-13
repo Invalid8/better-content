@@ -39,14 +39,28 @@
       "types": "./dist/adapters/postgres.d.ts",
       "import": "./dist/adapters/postgres.js",
       "require": "./dist/adapters/postgres.cjs"
+    },
+    "./storage/cloudinary": {
+      "types": "./dist/storage/cloudinary.d.ts",
+      "import": "./dist/storage/cloudinary.js",
+      "require": "./dist/storage/cloudinary.cjs"
+    },
+    "./storage/cloudinary/server": {
+      "types": "./dist/storage/cloudinary/server.d.ts",
+      "import": "./dist/storage/cloudinary/server.js",
+      "require": "./dist/storage/cloudinary/server.cjs"
     }
   },
   "peerDependencies": {
+    "cloudinary": ">=2",
     "drizzle-orm": ">=0.40",
     "pg": ">=8",
     "react": ">=18"
   },
   "peerDependenciesMeta": {
+    "cloudinary": {
+      "optional": true
+    },
     "drizzle-orm": {
       "optional": true
     },
@@ -74,6 +88,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "cloudinary": "^2.10.0",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.22.0",
     "react": "^19.2.7",

@@ -24,6 +24,8 @@ export default defineConfig([
       core: "src/core/index.ts",
       server: "src/server/index.ts",
       "adapters/postgres": "src/adapters/postgres/index.ts",
+      "storage/cloudinary": "src/storage/cloudinary/index.ts",
+      "storage/cloudinary/server": "src/storage/cloudinary/server.ts",
     },
     clean: true,
   },
