@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="better-content logo: a page of text with one line highlighted by an editor's marker">
+  <rect width="64" height="64" rx="14" fill="#20242B"/>
+  <rect x="12" y="14" width="40" height="6" rx="2" fill="#FAF9F6"/>
+  <rect x="12" y="26" width="28" height="5" rx="2" fill="#71767F"/>
+  <rect x="12" y="38" width="40" height="12" rx="3" fill="#FFE24A"/>
+  <rect x="31" y="41" width="2.5" height="6" rx="1" fill="#20242B"/>
+</svg>

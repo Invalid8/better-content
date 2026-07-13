@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Invalid8/better-content/main/logo.svg" alt="better-content — a page of text with one line highlighted by an editor's marker" width="88" height="88" />
+</p>
+
 # better-content
 
 Own-your-data, adapter-driven, framework-agnostic inline-edit CMS engine. MIT.
