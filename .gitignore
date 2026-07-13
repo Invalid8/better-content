@@ -5,3 +5,6 @@ coverage/
 .env
 .env.*
 .DS_Store
+
+docs/
+.claude/
