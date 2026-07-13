@@ -1,6 +1,6 @@
 {
   "name": "better-content",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-neutral, own-your-data, adapter-driven inline-edit CMS engine.",
   "license": "MIT",
   "type": "module",
@@ -9,7 +9,8 @@
     "node": ">=18"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
