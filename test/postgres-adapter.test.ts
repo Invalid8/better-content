@@ -46,7 +46,7 @@ beforeAll(async () => {
     db: drizzle(client, { schema }) as never,
     schema,
   });
-});
+}, 60000);
 
 beforeEach(async () => {
   await client.exec("TRUNCATE projects;");

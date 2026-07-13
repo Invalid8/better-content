@@ -26,6 +26,7 @@ export default defineConfig([
       "adapters/postgres": "src/adapters/postgres/index.ts",
       "storage/cloudinary": "src/storage/cloudinary/index.ts",
       "storage/cloudinary/server": "src/storage/cloudinary/server.ts",
+      "auth/firebase": "src/auth/firebase/index.ts",
     },
     clean: true,
   },
@@ -33,6 +34,7 @@ export default defineConfig([
     ...shared,
     entry: {
       react: "src/react/index.ts",
+      "auth/firebase/client": "src/auth/firebase/client/index.tsx",
     },
     banner: { js: '"use client";' },
     clean: false,

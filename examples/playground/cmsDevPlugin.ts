@@ -28,6 +28,15 @@ const DDL = `
   );
 `;
 
+const auth = {
+  verifyRequest: async (req: Request) => {
+    const cookie = req.headers.get("cookie") ?? "";
+    return /(^|;\s*)adminToken=demo-admin(;|$)/.test(cookie)
+      ? { isAdmin: true }
+      : null;
+  },
+};
+
 const ready = (async () => {
   const client = new PGlite();
   await client.exec(DDL);
@@ -35,10 +44,7 @@ const ready = (async () => {
     db: drizzle(client, { schema }) as never,
     schema,
   });
-  return createCmsHandlers({
-    data,
-    auth: { verifyRequest: async () => ({ isAdmin: true }) },
-  });
+  return { data, handlers: createCmsHandlers({ data, auth }) };
 })();
 
 async function readBody(req: Connect.IncomingMessage): Promise<string> {
@@ -53,7 +59,7 @@ export function cmsDevServer(): Plugin {
     configureServer(server) {
       server.middlewares.use("/api/admin", (req, res) => {
         void (async () => {
-          const handlers = await ready;
+          const { data, handlers } = await ready;
           const segments = (req.url ?? "")
             .split("?")[0]!
             .split("/")
@@ -70,13 +76,27 @@ export function cmsDevServer(): Plugin {
             res.end(JSON.stringify({ error: "Not found" }));
             return;
           }
-          const body =
-            method === "GET" || method === "DELETE"
-              ? undefined
-              : await readBody(req);
+
+          res.setHeader("Content-Type", "application/json");
+
+          if (method === "GET") {
+            const doc = await data.fetchById(collection, id);
+            res.statusCode = doc ? 200 : 404;
+            res.end(JSON.stringify(doc ?? { error: "Document not found" }));
+            return;
+          }
+
+          const body = method === "DELETE" ? undefined : await readBody(req);
           const request = new Request(
             `http://localhost/api/admin/${collection}/${id}`,
-            { method, headers: { "Content-Type": "application/json" }, body },
+            {
+              method,
+              headers: {
+                "Content-Type": "application/json",
+                cookie: req.headers.cookie ?? "",
+              },
+              body,
+            },
           );
           const response = await handler(request, {
             params: Promise.resolve({ collection, id }),

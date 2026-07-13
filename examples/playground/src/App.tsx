@@ -36,9 +36,20 @@ const defaultItems: ItemMap = {
   ],
 };
 
-function Toolbar() {
+const hasAdminCookie = () =>
+  document.cookie.split(";").some((c) => c.trim() === "adminToken=demo-admin");
+
+function Toolbar({ status }: { status: string }) {
   const { isEditing, toggleEdit } = useCmsAuth();
   const { hasUnsavedChanges, saving, saveAll } = usePageContext();
+  const [admin, setAdmin] = useState(hasAdminCookie);
+
+  const toggleAdmin = () => {
+    document.cookie = admin
+      ? "adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      : "adminToken=demo-admin; path=/";
+    setAdmin(hasAdminCookie());
+  };
 
   return (
     <header>
@@ -49,6 +60,10 @@ function Toolbar() {
       >
         {saving ? "Saving…" : hasUnsavedChanges ? "Save all" : "Saved"}
       </button>
+      <button onClick={toggleAdmin}>
+        {admin ? "Sign out (admin)" : "Sign in as admin"}
+      </button>
+      <span>{status}</span>
     </header>
   );
 }
@@ -113,6 +128,7 @@ function Hero() {
 
 export default function App() {
   const [initialItems, setInitialItems] = useState<ItemMap | null>(null);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/sections/hero")
@@ -131,8 +147,9 @@ export default function App() {
         transport={transport}
         storage={dataUrlStorage}
         initialItems={initialItems}
+        notify={{ success: setStatus, error: setStatus }}
       >
-        <Toolbar />
+        <Toolbar status={status} />
         <Hero />
       </PageProvider>
     </AnonymousEditProvider>

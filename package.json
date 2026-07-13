@@ -49,16 +49,34 @@
       "types": "./dist/storage/cloudinary/server.d.ts",
       "import": "./dist/storage/cloudinary/server.js",
       "require": "./dist/storage/cloudinary/server.cjs"
+    },
+    "./auth/firebase": {
+      "types": "./dist/auth/firebase.d.ts",
+      "import": "./dist/auth/firebase.js",
+      "require": "./dist/auth/firebase.cjs"
+    },
+    "./auth/firebase/client": {
+      "types": "./dist/auth/firebase/client.d.ts",
+      "import": "./dist/auth/firebase/client.js",
+      "require": "./dist/auth/firebase/client.cjs"
     }
   },
   "peerDependencies": {
     "cloudinary": ">=2",
     "drizzle-orm": ">=0.40",
+    "firebase": ">=10",
+    "firebase-admin": ">=12",
     "pg": ">=8",
     "react": ">=18"
   },
   "peerDependenciesMeta": {
     "cloudinary": {
+      "optional": true
+    },
+    "firebase": {
+      "optional": true
+    },
+    "firebase-admin": {
       "optional": true
     },
     "drizzle-orm": {
@@ -85,11 +103,15 @@
   ],
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.4",
+    "@testing-library/react": "^16.3.2",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "cloudinary": "^2.10.0",
     "drizzle-orm": "^0.45.2",
+    "firebase": "^12.16.0",
+    "firebase-admin": "^14.1.0",
+    "jsdom": "^29.1.1",
     "pg": "^8.22.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
