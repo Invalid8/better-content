@@ -23,6 +23,7 @@ export type {
 export { dirtyKey, getPath, isFilterGroup, setPath } from "./helpers";
 export { consoleNotifier, type Notifier } from "./notifier";
 export {
+  adapterTransport,
   inMemoryTransport,
   restTransport,
   type InMemoryTransport,

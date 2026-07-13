@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import {
   and,
   asc,
@@ -209,7 +208,9 @@ export class PostgresDataAdapter implements DataAdapter {
     collection: string,
     data: T,
   ): Promise<T & { id: string }> {
-    return this.createWithId(collection, randomUUID(), data);
+    const id =
+      globalThis.crypto?.randomUUID?.() ?? `${collection}-${Date.now()}`;
+    return this.createWithId(collection, id, data);
   }
 
   async createWithId<T = Record<string, unknown>>(

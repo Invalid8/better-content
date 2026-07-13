@@ -1,4 +1,4 @@
-import type { Item, ItemMap } from "./types";
+import type { DataAdapter, Item, ItemMap } from "./types";
 
 export interface Transport {
   save(collection: string, id: string, item: Item): Promise<void>;
@@ -40,6 +40,20 @@ export function restTransport({
     async remove(collection, id) {
       const res = await fetch(url(collection, id), { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete item");
+    },
+  };
+}
+
+export function adapterTransport(data: DataAdapter): Transport {
+  return {
+    async save(collection, id, item) {
+      await data.upsert(collection, id, item);
+    },
+    async patch(collection, id, partial) {
+      await data.update(collection, id, partial);
+    },
+    async remove(collection, id) {
+      await data.delete(collection, id);
     },
   };
 }
