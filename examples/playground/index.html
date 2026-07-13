@@ -3,33 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>better-content playground</title>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 40rem;
-        margin: 4rem auto;
-        padding: 0 1rem;
-        line-height: 1.6;
-      }
-      header {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 2rem;
-      }
-      button {
-        padding: 0.4rem 1rem;
-        cursor: pointer;
-      }
-      [data-cms-editable] {
-        outline: 1px dashed #999;
-        outline-offset: 3px;
-        border-radius: 2px;
-      }
-      [data-cms-focused] {
-        outline: 2px solid #4a90d9;
-      }
-    </style>
+    <meta
+      name="description"
+      content="Live demo of better-content: inline-edit this page and every field persists to a real Postgres running in your browser."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2320242B'/%3E%3Crect x='3' y='9' width='10' height='4' fill='%23FFE24A'/%3E%3Crect x='3' y='3' width='10' height='2' fill='%23FAF9F6'/%3E%3Crect x='3' y='6.2' width='7' height='1.4' fill='%2371767F'/%3E%3C/svg%3E"
+    />
+    <title>better-content: edit this page, it's a database</title>
   </head>
   <body>
     <div id="root"></div>

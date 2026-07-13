@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "npm --prefix ../.. run build",
     "dev": "vite",
-    "prebuild": "npm --prefix ../.. run build",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource/ibm-plex-serif": "^5.2.7",
     "better-content": "file:../..",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
