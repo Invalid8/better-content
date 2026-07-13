@@ -40,6 +40,11 @@
       "import": "./dist/adapters/postgres.js",
       "require": "./dist/adapters/postgres.cjs"
     },
+    "./adapters/firestore": {
+      "types": "./dist/adapters/firestore.d.ts",
+      "import": "./dist/adapters/firestore.js",
+      "require": "./dist/adapters/firestore.cjs"
+    },
     "./storage/cloudinary": {
       "types": "./dist/storage/cloudinary.d.ts",
       "import": "./dist/storage/cloudinary.js",

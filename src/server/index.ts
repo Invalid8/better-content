@@ -3,6 +3,15 @@ export {
   type CmsHandlersDeps,
 } from "./createCmsHandlers";
 export { createAdminGate, UnauthorizedError } from "./createAdminGate";
+export {
+  resolveRelations,
+  type ResolveRelationsOptions,
+} from "./relations";
+export {
+  loadItemMap,
+  type ItemCollectionLoadConfig,
+  type ItemMapLoadConfig,
+} from "./loadItemMap";
 
 export type {
   AuthAdapter,

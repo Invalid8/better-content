@@ -20,3 +20,8 @@ export {
   type EditableImageProps,
   type EditableImageRenderState,
 } from "./EditableImage";
+export {
+  useMarkdownEditor,
+  type MarkdownEditorApi,
+  type UseMarkdownEditorOptions,
+} from "./MarkdownEditor";
