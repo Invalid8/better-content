@@ -368,127 +368,6 @@ button {
   text-decoration: none;
 }
 
-/* ---------- database button + dialog ---------- */
-
-.db-fab {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: var(--drawer);
-  color: var(--drawer-ink);
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  border: none;
-  border-radius: 999px;
-  padding: 0.6rem 1.15rem;
-  box-shadow:
-    0 2px 6px rgba(20, 24, 30, 0.25),
-    0 8px 24px rgba(20, 24, 30, 0.18);
-  transition: transform 0.15s ease;
-}
-
-.db-fab:hover {
-  transform: translateY(-2px);
-}
-
-.db-fab .count,
-.db-head .count {
-  color: #7ea1d4;
-}
-
-.db-dialog {
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  width: min(58rem, calc(100vw - 2rem));
-  max-height: min(80vh, 40rem);
-  background: var(--drawer);
-  color: var(--drawer-ink);
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-}
-
-.db-dialog::backdrop {
-  background: rgba(20, 24, 30, 0.45);
-  backdrop-filter: blur(2px);
-}
-
-.db-head {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid #262d36;
-}
-
-.db-head span:first-child {
-  color: var(--marker);
-  font-weight: 500;
-}
-
-.db-close {
-  margin-left: auto;
-  background: none;
-  border: 1px solid #262d36;
-  border-radius: 0;
-  color: var(--drawer-ink);
-  font-family: inherit;
-  font-size: 0.8125rem;
-  padding: 0.2rem 0.6rem;
-}
-
-.db-close:hover {
-  border-color: var(--drawer-ink);
-}
-
-.db-dialog .tables {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  padding: 1rem 1.5rem 1.25rem;
-  overflow-y: auto;
-}
-
-.db-dialog table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-.db-dialog caption {
-  text-align: left;
-  color: var(--marker);
-  padding-bottom: 0.4rem;
-  font-weight: 500;
-}
-
-.db-dialog th,
-.db-dialog td {
-  text-align: left;
-  padding: 0.25rem 0.75rem 0.25rem 0;
-  border-bottom: 1px solid #262d36;
-  vertical-align: top;
-  overflow-wrap: anywhere;
-  max-width: 16rem;
-  font-weight: 400;
-}
-
-.db-dialog th {
-  color: #7ea1d4;
-  font-size: 0.75rem;
-}
-
-.db-dialog .hint {
-  padding: 0 1.5rem 1.25rem;
-  margin: 0;
-  color: #6d7681;
-  font-size: 0.75rem;
-}
-
 /* ---------- responsive & motion ---------- */
 
 @media (max-width: 44rem) {
@@ -511,7 +390,6 @@ button {
     scroll-behavior: auto;
   }
 
-  .db-fab,
   .btn {
     transition: none;
   }
