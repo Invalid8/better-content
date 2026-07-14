@@ -12,7 +12,7 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans": "^5.2.8",
     "@fontsource/ibm-plex-serif": "^5.2.7",
-    "better-content": "^0.1.1",
+    "better-content": "^0.2.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
