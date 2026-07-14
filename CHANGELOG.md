@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-15
+
+### Added
+
+- Selector subscriptions in `better-content/react`: `useCmsItem(collection,
+  id)` re-renders a component only when that item changes, and
+  `useCmsEngine()` exposes the stable engine. `ContentEditSpan` now uses them
+  internally, so each editor re-renders for its own item instead of every
+  change. The coarse `usePageContext` behavior is unchanged.
+- `better-content/devtools`: `registerDataInspector()` defines
+  `<better-content-inspector>`, a framework-free custom element (shadow DOM,
+  zero runtime dependencies) that shows live rows from a `DataAdapter` in a
+  floating button + dialog. Give it your `engine` and it refreshes after every
+  save. Works in React, Vue, Svelte, or plain HTML; mount it in development
+  only. React users get a typed wrapper instead:
+  `import { DataInspector } from "better-content/devtools/react"` (no JSX
+  augmentation or manual registration needed, works on React 18 and 19).
+
+### Fixed
+
+- `ContentEditSpan` no longer collapses multi-line input: line breaks the
+  browser represents as element markup are read back via `innerText`, and the
+  rendered element uses `white-space: pre-wrap` so stored newlines stay
+  visible in and out of edit mode.
+
 ## [0.1.1] - 2026-07-14
 
 ### Added
@@ -53,4 +78,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   401 `{ logout: true }`.
 
 [0.1.0]: https://github.com/Invalid8/better-content/releases/tag/v0.1.0
+[0.2.0]: https://github.com/Invalid8/better-content/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Invalid8/better-content/releases/tag/v0.1.1

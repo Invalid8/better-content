@@ -1,6 +1,6 @@
 {
   "name": "better-content",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Framework-neutral, own-your-data, adapter-driven inline-edit CMS engine.",
   "license": "MIT",
   "type": "module",
@@ -65,6 +65,16 @@
       "types": "./dist/auth/firebase/client.d.ts",
       "import": "./dist/auth/firebase/client.js",
       "require": "./dist/auth/firebase/client.cjs"
+    },
+    "./devtools": {
+      "types": "./dist/devtools.d.ts",
+      "import": "./dist/devtools.js",
+      "require": "./dist/devtools.cjs"
+    },
+    "./devtools/react": {
+      "types": "./dist/devtools/react.d.ts",
+      "import": "./dist/devtools/react.js",
+      "require": "./dist/devtools/react.cjs"
     }
   },
   "peerDependencies": {

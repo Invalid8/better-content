@@ -18,7 +18,7 @@ import { DEMO_ITEMS, readCachedItems, writeCachedItems } from "./demoContent";
 import { Toolbar } from "./Toolbar";
 import { Hero } from "./Hero";
 import { Notes } from "./Notes";
-import { DataDialog } from "./DataDialog";
+import { DataInspector } from "./DataInspector";
 import { Footer } from "./Footer";
 
 type DbRuntime = {
@@ -79,7 +79,7 @@ function Page({
           <Notes />
         </main>
         <Footer resetDemo={dbRuntime?.resetDemo} />
-        {dbRuntime && <DataDialog adapter={dbRuntime.adapter} />}
+        {dbRuntime && <DataInspector adapter={dbRuntime.adapter} />}
       </div>
     </PageProvider>
   );

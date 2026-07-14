@@ -71,7 +71,7 @@ const client = new PGlite("idb://better-content-demo");
 
 export const adapter = new PostgresDataAdapter({
   db: drizzle(client, { schema }) as never,
-  schema,
+  schema: schema as never,
 });
 
 export async function initDb(): Promise<void> {

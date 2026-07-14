@@ -5,6 +5,7 @@ export {
   type PageProviderProps,
 } from "./PageProvider";
 export { usePageContext } from "./usePageContext";
+export { useCmsEngine, useCmsItem } from "./hooks";
 export {
   AnonymousEditProvider,
   CmsAuthContext,

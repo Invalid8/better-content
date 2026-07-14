@@ -21,6 +21,8 @@ export const PageContext = createContext<PageContextValue | undefined>(
   undefined,
 );
 
+export const EngineContext = createContext<CmsEngine | undefined>(undefined);
+
 export interface PageProviderProps extends CmsEngineOptions {
   children: ReactNode;
 }
@@ -37,5 +39,9 @@ export const PageProvider = ({ children, ...options }: PageProviderProps) => {
     [engine, snapshot],
   );
 
-  return <PageContext.Provider value={value}>{children}</PageContext.Provider>;
+  return (
+    <EngineContext.Provider value={engine}>
+      <PageContext.Provider value={value}>{children}</PageContext.Provider>
+    </EngineContext.Provider>
+  );
 };
