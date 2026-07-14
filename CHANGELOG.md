@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `import { DataInspector } from "better-content/devtools/react"` (no JSX
   augmentation or manual registration needed, works on React 18 and 19).
 
+### Fixed
+
+- `ContentEditSpan` no longer collapses multi-line input: line breaks the
+  browser represents as element markup are read back via `innerText`, and the
+  rendered element uses `white-space: pre-wrap` so stored newlines stay
+  visible in and out of edit mode.
+
 ## [0.1.1] - 2026-07-14
 
 ### Added

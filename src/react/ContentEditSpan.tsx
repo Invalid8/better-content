@@ -25,6 +25,14 @@ export interface ContentEditSpanProps {
 
 const defaultRenderValue = (raw: string): ReactNode => raw;
 
+const preWrap = { whiteSpace: "pre-wrap" } as const;
+
+function readText(el: HTMLElement): string {
+  return typeof el.innerText === "string"
+    ? el.innerText
+    : (el.textContent ?? "");
+}
+
 export function ContentEditSpan({
   collection,
   itemId,
@@ -45,7 +53,11 @@ export function ContentEditSpan({
   const Component = as;
 
   if (!isEditing) {
-    return <Component className={className}>{renderValue(raw)}</Component>;
+    return (
+      <Component className={className} style={preWrap}>
+        {renderValue(raw)}
+      </Component>
+    );
   }
 
   return (
@@ -113,12 +125,14 @@ function EditableContentSpan({
 
   const handleInput = useCallback(() => {
     if (contentRef.current) {
-      draftRef.current = contentRef.current.textContent || "";
+      draftRef.current = readText(contentRef.current);
     }
   }, []);
 
   const handleBlur = useCallback(() => {
-    const next = contentRef.current?.textContent ?? draftRef.current;
+    const next = contentRef.current
+      ? readText(contentRef.current)
+      : draftRef.current;
     draftRef.current = next;
     setEditValue(next);
     setIsFocused(false);
@@ -136,6 +150,7 @@ function EditableContentSpan({
     <Component
       ref={contentRef}
       className={className}
+      style={preWrap}
       data-cms-editable=""
       data-cms-editing={isEditing ? "" : undefined}
       data-cms-focused={isFocused ? "" : undefined}
