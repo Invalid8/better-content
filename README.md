@@ -4,12 +4,19 @@
 
 # better-content
 
+[![CI](https://github.com/Invalid8/better-content/actions/workflows/ci.yml/badge.svg)](https://github.com/Invalid8/better-content/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/better-content)](https://www.npmjs.com/package/better-content)
+
 Own-your-data, adapter-driven, framework-agnostic inline-edit CMS engine. MIT.
 
+**[Try the live demo](https://better-content-playground.vercel.app/)**: edit
+the page in your browser, every field persists to a real Postgres running in
+your tab.
+
 Edit content directly on your live pages. Changes persist to **your** database
-through a small adapter seam — no hosted service, no lock-in, no proprietary
-backend. The engine is a framework-free external store; React is the first
-binding.
+through a small adapter seam, with no hosted service, no lock-in, and no
+proprietary backend. The engine is a framework-free external store; React is
+the first binding.
 
 > **Status: pre-1.0.** The API is still settling; minor versions may break
 > until 1.0. Two adapters (Postgres, Firestore), one storage provider
