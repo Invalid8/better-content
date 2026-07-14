@@ -13,6 +13,8 @@ Own-your-data, adapter-driven, framework-agnostic inline-edit CMS engine. MIT.
 the page in your browser, every field persists to a real Postgres running in
 your tab.
 
+[![17-second demo: toggling edit mode, typing into the page, saving, and inspecting the database](https://raw.githubusercontent.com/Invalid8/better-content/main/assets/demo.gif)](https://better-content-playground.vercel.app/)
+
 Edit content directly on your live pages. Changes persist to **your** database
 through a small adapter seam, with no hosted service, no lock-in, and no
 proprietary backend. The engine is a framework-free external store; React is
