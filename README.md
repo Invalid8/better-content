@@ -101,12 +101,34 @@ Toggle edit mode, click the text, type, save. Field edits are **deferred**
 (buffered locally, flushed by `saveAll`); item operations
 (create/update/delete/reorder) are **immediate and optimistic** with rollback.
 
+**Fine-grained re-renders:** `useCmsItem(collection, id)` subscribes a
+component to a single item, so editing one field re-renders one editor, not
+the page. `useCmsEngine()` returns the stable engine for calling operations
+without subscribing.
+
+**See your data while you build:** mount the dev inspector and get a floating
+button that opens a live view of your collections, refreshed on every save.
+
+```tsx
+import { DataInspector } from "better-content/devtools/react";
+
+{process.env.NODE_ENV === "development" && (
+  <DataInspector adapter={adapter} engine={engine} collections={["sections"]} />
+)}
+```
+
+It is a framework-free custom element underneath
+(`better-content/devtools`), so Vue, Svelte, and plain HTML apps can use
+`registerDataInspector()` + `<better-content-inspector>` directly.
+
 ## Subpath exports
 
 | Import | What | Runs on |
 |---|---|---|
-| `better-content/core` | engine, `Transport` (`restTransport`, `inMemoryTransport`), types | anywhere |
-| `better-content/react` | `PageProvider`, `ContentEditSpan`, `EditableImage`, `useMarkdownEditor`, auth context | client |
+| `better-content/core` | engine, `Transport` (`restTransport`, `adapterTransport`, `inMemoryTransport`), types | anywhere |
+| `better-content/react` | `PageProvider`, `ContentEditSpan`, `EditableImage`, `useCmsItem`, `useMarkdownEditor`, auth context | client |
+| `better-content/devtools` | `<better-content-inspector>` custom element: live database view for development | client |
+| `better-content/devtools/react` | typed `DataInspector` React wrapper for the element | client |
 | `better-content/server` | `createCmsHandlers`, `createAdminGate`, `loadItemMap`, `resolveRelations` | server |
 | `better-content/adapters/postgres` | Drizzle-backed, typed-only adapter | server |
 | `better-content/adapters/firestore` | Firestore adapter (throws on unsupported ops) | server |

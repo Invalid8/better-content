@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-15
+
 ### Added
 
 - Selector subscriptions in `better-content/react`: `useCmsItem(collection,
@@ -76,4 +78,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   401 `{ logout: true }`.
 
 [0.1.0]: https://github.com/Invalid8/better-content/releases/tag/v0.1.0
+[0.2.0]: https://github.com/Invalid8/better-content/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Invalid8/better-content/releases/tag/v0.1.1
