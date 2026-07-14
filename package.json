@@ -99,7 +99,8 @@
     "build": "tsup",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "merge:staging": "sh scripts/merge-staging.sh"
   },
   "keywords": [
     "cms",
