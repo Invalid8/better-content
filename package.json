@@ -70,6 +70,11 @@
       "types": "./dist/devtools.d.ts",
       "import": "./dist/devtools.js",
       "require": "./dist/devtools.cjs"
+    },
+    "./devtools/react": {
+      "types": "./dist/devtools/react.d.ts",
+      "import": "./dist/devtools/react.js",
+      "require": "./dist/devtools/react.cjs"
     }
   },
   "peerDependencies": {

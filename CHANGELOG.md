@@ -19,7 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   zero runtime dependencies) that shows live rows from a `DataAdapter` in a
   floating button + dialog. Give it your `engine` and it refreshes after every
   save. Works in React, Vue, Svelte, or plain HTML; mount it in development
-  only.
+  only. React users get a typed wrapper instead:
+  `import { DataInspector } from "better-content/devtools/react"` (no JSX
+  augmentation or manual registration needed, works on React 18 and 19).
 
 ## [0.1.1] - 2026-07-14
 
