@@ -13,6 +13,9 @@ export default defineConfig({
       "better-content/server": fileURLToPath(
         new URL("./src/server/index.ts", import.meta.url),
       ),
+      "better-content/devtools": fileURLToPath(
+        new URL("./src/devtools/index.ts", import.meta.url),
+      ),
     },
   },
 });

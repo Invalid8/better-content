@@ -28,6 +28,7 @@ export default defineConfig([
       "storage/cloudinary": "src/storage/cloudinary/index.ts",
       "storage/cloudinary/server": "src/storage/cloudinary/server.ts",
       "auth/firebase": "src/auth/firebase/index.ts",
+      devtools: "src/devtools/index.ts",
     },
     clean: true,
   },

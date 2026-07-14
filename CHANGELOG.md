@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `better-content/devtools`: `registerDataInspector()` defines
+  `<better-content-inspector>`, a framework-free custom element (shadow DOM,
+  zero runtime dependencies) that shows live rows from a `DataAdapter` in a
+  floating button + dialog. Give it your `engine` and it refreshes after every
+  save. Works in React, Vue, Svelte, or plain HTML; mount it in development
+  only.
+
 ## [0.1.1] - 2026-07-14
 
 ### Added
