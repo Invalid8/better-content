@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { getPath } from "better-content/core";
-import { usePageContext } from "./usePageContext";
+import { useCmsEngine, useCmsItem } from "./hooks";
 import { useCmsAuth } from "./auth";
 
 export interface ContentEditSpanProps {
@@ -34,10 +34,10 @@ export function ContentEditSpan({
   as = "span",
   renderValue = defaultRenderValue,
 }: ContentEditSpanProps) {
-  const { getItem, editField } = usePageContext();
+  const { editField } = useCmsEngine();
   const { isEditing } = useCmsAuth();
 
-  const item = getItem(collection, itemId);
+  const item = useCmsItem(collection, itemId);
   const raw =
     (getPath(item, fieldKey) as string) ??
     (typeof children === "string" ? children : "");

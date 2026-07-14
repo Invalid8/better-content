@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Selector subscriptions in `better-content/react`: `useCmsItem(collection,
+  id)` re-renders a component only when that item changes, and
+  `useCmsEngine()` exposes the stable engine. `ContentEditSpan` now uses them
+  internally, so each editor re-renders for its own item instead of every
+  change. The coarse `usePageContext` behavior is unchanged.
 - `better-content/devtools`: `registerDataInspector()` defines
   `<better-content-inspector>`, a framework-free custom element (shadow DOM,
   zero runtime dependencies) that shows live rows from a `DataAdapter` in a
