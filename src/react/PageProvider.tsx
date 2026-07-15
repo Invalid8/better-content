@@ -23,12 +23,21 @@ export const PageContext = createContext<PageContextValue | undefined>(
 
 export const EngineContext = createContext<CmsEngine | undefined>(undefined);
 
-export interface PageProviderProps extends CmsEngineOptions {
+export type PageProviderProps = {
   children: ReactNode;
-}
+} & (
+  | ({ engine: CmsEngine } & Partial<CmsEngineOptions>)
+  | ({ engine?: undefined } & CmsEngineOptions)
+);
 
-export const PageProvider = ({ children, ...options }: PageProviderProps) => {
-  const [engine] = useState(() => createCmsEngine(options));
+export const PageProvider = ({
+  children,
+  engine: providedEngine,
+  ...options
+}: PageProviderProps) => {
+  const [engine] = useState(
+    () => providedEngine ?? createCmsEngine(options as CmsEngineOptions),
+  );
   const snapshot = useSyncExternalStore(
     engine.subscribe,
     engine.getSnapshot,

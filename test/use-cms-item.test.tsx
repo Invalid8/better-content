@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { CmsEngine } from "../src/core";
+import { createCmsEngine, type CmsEngine } from "../src/core";
 import { inMemoryTransport } from "../src/core/transport";
 import {
   AnonymousEditProvider,
@@ -92,5 +92,27 @@ describe("useCmsItem", () => {
     expect(() => render(<Naked />)).toThrow(
       "useCmsEngine must be used within a PageProvider",
     );
+  });
+});
+
+describe("PageProvider with an external engine", () => {
+  it("uses the provided engine instead of creating one", () => {
+    const engine = createCmsEngine({
+      transport: inMemoryTransport(),
+      notify: { success: () => {}, error: () => {} },
+      initialItems: { posts: [{ id: "x", title: "External" }] },
+    });
+    const renders: Record<string, number> = {};
+    render(
+      <AnonymousEditProvider>
+        <PageProvider engine={engine}>
+          <Probe id="x" renders={renders} />
+        </PageProvider>
+      </AnonymousEditProvider>,
+    );
+    expect(screen.getByTestId("x").textContent).toBe("External");
+
+    act(() => engine.editField("posts", "x", "title", "Synced"));
+    expect(screen.getByTestId("x").textContent).toBe("Synced");
   });
 });

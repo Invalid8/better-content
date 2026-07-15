@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `PageProvider` accepts an optional `engine` prop to bind an
+  externally created engine, enabling one engine shared across multiple
+  React roots or across frameworks (e.g. Astro islands).
 - `better-content/svelte`: a Svelte binding with zero dependency on the
   svelte package. `engineStore(engine)` and `itemStore(engine, collection,
   id)` implement the readable-store contract (`itemStore` emits only when
