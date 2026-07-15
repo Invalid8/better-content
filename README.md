@@ -127,6 +127,7 @@ It is a framework-free custom element underneath
 |---|---|---|
 | `better-content/core` | engine, `Transport` (`restTransport`, `adapterTransport`, `inMemoryTransport`), types | anywhere |
 | `better-content/react` | `PageProvider`, `ContentEditSpan`, `EditableImage`, `useCmsItem`, `useMarkdownEditor`, auth context | client |
+| `better-content/svelte` | `engineStore`, `itemStore`, `contentEdit` action | client |
 | `better-content/devtools` | `<better-content-inspector>` custom element: live database view for development | client |
 | `better-content/devtools/react` | typed `DataInspector` React wrapper for the element | client |
 | `better-content/server` | `createCmsHandlers`, `createAdminGate`, `loadItemMap`, `resolveRelations` | server |

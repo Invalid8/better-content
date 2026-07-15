@@ -75,6 +75,11 @@
       "types": "./dist/devtools/react.d.ts",
       "import": "./dist/devtools/react.js",
       "require": "./dist/devtools/react.cjs"
+    },
+    "./svelte": {
+      "types": "./dist/svelte.d.ts",
+      "import": "./dist/svelte.js",
+      "require": "./dist/svelte.cjs"
     }
   },
   "peerDependencies": {

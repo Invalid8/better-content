@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `better-content/svelte`: a Svelte binding with zero dependency on the
+  svelte package. `engineStore(engine)` and `itemStore(engine, collection,
+  id)` implement the readable-store contract (`itemStore` emits only when
+  its item changes); the `contentEdit` element action provides inline text
+  editing with the same draft, multi-line, and `data-cms-*` behavior as the
+  React primitive. Works with Svelte 4 and 5.
+
 ## [0.2.0] - 2026-07-15
 
 ### Added

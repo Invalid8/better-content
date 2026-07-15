@@ -24,6 +24,7 @@ export default defineConfig({
             { text: "How the engine works", link: "/guide/how-it-works" },
             { text: "The editing model", link: "/guide/editing-model" },
             { text: "React binding", link: "/guide/react-binding" },
+            { text: "Svelte binding", link: "/guide/svelte-binding" },
             { text: "Transports", link: "/guide/transports" },
             { text: "Database adapters", link: "/guide/adapters" },
             { text: "Auth and the admin gate", link: "/guide/auth" },
