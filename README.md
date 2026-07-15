@@ -9,9 +9,9 @@
 
 Own-your-data, adapter-driven, framework-agnostic inline-edit CMS engine. MIT.
 
-**[Try the live demo](https://better-content-playground.vercel.app/)**: edit
-the page in your browser, every field persists to a real Postgres running in
-your tab.
+**[Documentation](https://better-content-docs.vercel.app)** ·
+**[Live demo](https://better-content-playground.vercel.app/)**: edit the page
+in your browser, every field persists to a real Postgres running in your tab.
 
 [![17-second demo: toggling edit mode, typing into the page, saving, and inspecting the database](https://raw.githubusercontent.com/Invalid8/better-content/main/assets/demo.gif)](https://better-content-playground.vercel.app/)
 
