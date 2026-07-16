@@ -1,0 +1,57 @@
+<div class="state-panel">
+  <div class="panel-bar">
+    <span class="bar-label">live snapshot</span>
+    <code>engine.getSnapshot()</code>
+  </div>
+  <div class="state-grid">
+    <div class="stat">
+      <dt>rows in snapshot</dt>
+      <dd id="stat-rows">…</dd>
+    </div>
+    <div class="stat">
+      <dt>hasUnsavedChanges</dt>
+      <dd id="stat-dirty">…</dd>
+    </div>
+    <div class="stat">
+      <dt>saving</dt>
+      <dd id="stat-saving">…</dd>
+    </div>
+    <div class="stat">
+      <dt>pendingImages</dt>
+      <dd id="stat-images">…</dd>
+    </div>
+  </div>
+  <pre class="state-json" id="state-json" aria-label="snapshot.items, live">…</pre>
+</div>
+
+<script>
+  import { ready } from "../lib/engine";
+
+  const rows = document.getElementById("stat-rows")!;
+  const dirty = document.getElementById("stat-dirty")!;
+  const saving = document.getElementById("stat-saving")!;
+  const images = document.getElementById("stat-images")!;
+  const json = document.getElementById("state-json")!;
+
+  const shorten = (_key: string, value: unknown) =>
+    typeof value === "string" && value.length > 72
+      ? `${value.slice(0, 69)}…`
+      : value;
+
+  void ready.then((engine) => {
+    const render = () => {
+      const snapshot = engine.getSnapshot();
+      rows.textContent = String(
+        Object.values(snapshot.items).reduce((n, list) => n + list.length, 0),
+      );
+      dirty.textContent = String(snapshot.hasUnsavedChanges);
+      dirty.classList.toggle("is-hot", snapshot.hasUnsavedChanges);
+      saving.textContent = String(snapshot.saving);
+      saving.classList.toggle("is-hot", snapshot.saving);
+      images.textContent = String(snapshot.pendingImages.length);
+      json.textContent = JSON.stringify(snapshot.items, shorten, 2);
+    };
+    engine.subscribe(render);
+    render();
+  });
+</script>

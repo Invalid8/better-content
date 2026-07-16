@@ -1,0 +1,62 @@
+<section class="calls-panel" id="adapter" aria-labelledby="adapter-title">
+  <div class="panel-bar">
+    <span class="bar-label" id="adapter-title">adapter calls</span>
+    <label class="offline-toggle">
+      <input type="checkbox" checked />
+      simulate offline
+    </label>
+    <span class="live-dot">live</span>
+  </div>
+  <ol class="call-log" id="call-log" aria-live="polite"></ol>
+</section>
+
+<script>
+  import { ready } from "../lib/engine";
+  import { activeAdapterId } from "../lib/db";
+
+  const log = document.getElementById("call-log")!;
+  const maxLines = 7;
+  let previous = "";
+
+  const now = () =>
+    new Intl.DateTimeFormat(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(new Date());
+
+  const addLine = (message: string) => {
+    const line = document.createElement("li");
+    line.innerHTML = `<time></time><code></code>`;
+    line.querySelector("time")!.textContent = now();
+    line.querySelector("code")!.textContent = message;
+    log.prepend(line);
+    while (log.children.length > maxLines) log.lastElementChild?.remove();
+  };
+
+  void ready.then((engine) => {
+    const snapshot = engine.getSnapshot();
+    const rowCount = Object.values(snapshot.items).reduce(
+      (total, rows) => total + rows.length,
+      0,
+    );
+    addLine(`createEngine(${activeAdapterId}) -> mounted`);
+    addLine(`${activeAdapterId}.list(*) -> ${rowCount} rows`);
+    previous = JSON.stringify(snapshot.items);
+
+    engine.subscribe(() => {
+      const next = engine.getSnapshot();
+      const serialized = JSON.stringify(next.items);
+      if (serialized !== previous) {
+        previous = serialized;
+        const rows = Object.values(next.items).reduce(
+          (total, list) => total + list.length,
+          0,
+        );
+        addLine(`${activeAdapterId}.snapshot() -> ${rows} rows`);
+      }
+      if (next.saving) addLine(`${activeAdapterId}.saveAll() -> pending`);
+    });
+  });
+</script>

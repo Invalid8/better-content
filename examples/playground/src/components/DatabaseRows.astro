@@ -1,0 +1,46 @@
+<section class="database-panel" id="database" aria-labelledby="database-title">
+  <div class="panel-bar">
+    <span class="bar-label" id="database-title">your database</span>
+    <span class="row-pill" id="database-count">0 rows</span>
+  </div>
+  <div class="database-table" id="database-table" aria-live="polite"></div>
+</section>
+
+<script>
+  import { ready } from "../lib/engine";
+
+  const table = document.getElementById("database-table")!;
+  const count = document.getElementById("database-count")!;
+
+  const fields = [
+    ["hero.headline", "page", "hero", "headline"],
+    ["hero.intro", "page", "hero", "intro"],
+    ["shared.message", "page", "shared", "message"],
+    ["cards[0].title", "cards", "cards-are-rows", "title"],
+    ["cards[1].title", "cards", "ops-are-optimistic", "title"],
+  ] as const;
+
+  const shorten = (value: unknown) => {
+    const text = value == null ? "" : String(value);
+    return text.length > 130 ? `${text.slice(0, 127)}...` : text;
+  };
+
+  void ready.then((engine) => {
+    const render = () => {
+      const { items } = engine.getSnapshot();
+      table.replaceChildren();
+      for (const [key, collection, id, field] of fields) {
+        const row = items[collection]?.find((item) => item.id === id);
+        const item = document.createElement("div");
+        item.className = "database-row";
+        item.innerHTML = `<code></code><span></span>`;
+        item.querySelector("code")!.textContent = key;
+        item.querySelector("span")!.textContent = shorten(row?.[field]);
+        table.append(item);
+      }
+      count.textContent = `${fields.length} rows`;
+    };
+    engine.subscribe(render);
+    render();
+  });
+</script>
