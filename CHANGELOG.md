@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PageProvider` accepts an optional `engine` prop to bind an
   externally created engine, enabling one engine shared across multiple
   React roots or across frameworks (e.g. Astro islands).
+- `better-content/vue`: a Vue 3 binding. `useCmsSnapshot(engine)` and
+  `useCmsItem(engine, collection, id)` composables (shallow refs, scope-aware
+  cleanup, identity-based granularity) and the `vContentEdit` directive for
+  inline text editing with the shared draft, multi-line, and `data-cms-*`
+  behavior. Vue is an optional peer.
 - `better-content/svelte`: a Svelte binding with zero dependency on the
   svelte package. `engineStore(engine)` and `itemStore(engine, collection,
   id)` implement the readable-store contract (`itemStore` emits only when

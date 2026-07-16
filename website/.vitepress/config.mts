@@ -25,6 +25,7 @@ export default defineConfig({
             { text: "The editing model", link: "/guide/editing-model" },
             { text: "React binding", link: "/guide/react-binding" },
             { text: "Svelte binding", link: "/guide/svelte-binding" },
+            { text: "Vue binding", link: "/guide/vue-binding" },
             { text: "Transports", link: "/guide/transports" },
             { text: "Database adapters", link: "/guide/adapters" },
             { text: "Auth and the admin gate", link: "/guide/auth" },

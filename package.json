@@ -80,6 +80,11 @@
       "types": "./dist/svelte.d.ts",
       "import": "./dist/svelte.js",
       "require": "./dist/svelte.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.cjs"
     }
   },
   "peerDependencies": {
@@ -88,7 +93,8 @@
     "firebase": ">=10",
     "firebase-admin": ">=12",
     "pg": ">=8",
-    "react": ">=18"
+    "react": ">=18",
+    "vue": ">=3"
   },
   "peerDependenciesMeta": {
     "cloudinary": {
@@ -108,6 +114,9 @@
     },
     "react": {
       "optional": true
+    },
+    "vue": {
+      "optional": "true"
     }
   },
   "scripts": {
@@ -139,6 +148,7 @@
     "react-dom": "^19.2.7",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "vue": "^3.5.40"
   }
 }
