@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   contentEdit,
   engineStore,
+  imageEdit,
   itemStore,
 } from "../src/svelte/index";
 import { createCmsEngine, inMemoryTransport } from "../src/core";
@@ -139,5 +140,84 @@ describe("contentEdit action", () => {
     engine.editField("sections", "hero", "heading", "Silent");
     expect(node.textContent).toBe("Hello");
     node.remove();
+  });
+});
+
+describe("imageEdit", () => {
+  const makeStore = () => {
+    const engine = makeEngine();
+    const store = imageEdit(engine, {
+      collection: "sections",
+      itemId: "hero",
+      fieldKey: "cover",
+    });
+    return { engine, store };
+  };
+
+  it("reads the stored value and tracks engine changes", () => {
+    const { engine, store } = makeStore();
+    const run = vi.fn();
+    const stop = store.subscribe(run);
+
+    expect(run.mock.calls[0]![0]).toMatchObject({
+      src: "",
+      saving: false,
+      hasError: false,
+    });
+
+    engine.editField("sections", "hero", "cover", "https://a.test/pic.png");
+    expect(run.mock.lastCall![0].src).toBe("https://a.test/pic.png");
+    stop();
+  });
+
+  it("selectFile previews via an object URL and queues a pending upload", () => {
+    const urls = URL as unknown as { createObjectURL?: (b: Blob) => string };
+    const original = urls.createObjectURL;
+    urls.createObjectURL = () => "blob:preview";
+    try {
+      const { engine, store } = makeStore();
+      store.selectFile(new File(["x"], "pic.png", { type: "image/png" }));
+
+      expect(engine.getItem("sections", "hero")?.cover).toBe("blob:preview");
+      expect(engine.getSnapshot().pendingImages).toMatchObject([
+        {
+          collection: "sections",
+          itemId: "hero",
+          fieldKey: "cover",
+          localUrl: "blob:preview",
+          isExternal: false,
+        },
+      ]);
+    } finally {
+      urls.createObjectURL = original;
+    }
+  });
+
+  it("setExternalUrl validates and queues an external image", () => {
+    const { engine, store } = makeStore();
+
+    expect(store.setExternalUrl("not a url")).toBe(false);
+    expect(store.setExternalUrl("ftp://a.test/pic.png")).toBe(false);
+    expect(engine.getSnapshot().pendingImages).toHaveLength(0);
+
+    expect(store.setExternalUrl("https://a.test/pic.png")).toBe(true);
+    expect(engine.getSnapshot().pendingImages[0]).toMatchObject({
+      file: null,
+      localUrl: "https://a.test/pic.png",
+      isExternal: true,
+    });
+  });
+
+  it("handleError flips hasError until the next selection", () => {
+    const { store } = makeStore();
+    const run = vi.fn();
+    const stop = store.subscribe(run);
+
+    store.handleError();
+    expect(run.mock.lastCall![0].hasError).toBe(true);
+
+    expect(store.setExternalUrl("https://a.test/p.png")).toBe(true);
+    expect(run.mock.lastCall![0].hasError).toBe(false);
+    stop();
   });
 });

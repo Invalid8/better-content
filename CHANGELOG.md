@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its item changes); the `contentEdit` element action provides inline text
   editing with the same draft, multi-line, and `data-cms-*` behavior as the
   React primitive. Works with Svelte 4 and 5.
+- Image editing in the Vue and Svelte bindings, matching the React
+  `EditableImage` semantics: picking a file previews it via an object URL
+  and queues a pending upload that flushes on save; external URLs are
+  validated (http/https) and queued without a file. Vue gets the
+  `useEditableImage(engine, { collection, itemId, fieldKey })` composable
+  (reactive `src`/`saving`/`hasError` plus `openFilePicker`, `selectFile`,
+  `setExternalUrl`, `handleError`); Svelte gets `imageEdit(engine, options)`,
+  a readable store with the same methods.
 
 ## [0.2.0] - 2026-07-15
 

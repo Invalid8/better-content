@@ -1,5 +1,11 @@
 import { onScopeDispose, shallowRef, type ShallowRef } from "vue";
 import type { CmsEngine, CmsSnapshot, Item } from "better-content/core";
+import {
+  openImageFilePicker,
+  readImageView,
+  selectImageFile,
+  setExternalImageUrl,
+} from "../shared/image-edit";
 
 export function useCmsSnapshot(
   engine: CmsEngine,
@@ -26,6 +32,66 @@ export function useCmsItem(
   });
   onScopeDispose(stop);
   return item;
+}
+
+export interface EditableImageOptions {
+  collection: string;
+  itemId: string;
+  fieldKey: string;
+  accept?: string;
+}
+
+export interface EditableImageApi {
+  src: Readonly<ShallowRef<string>>;
+  saving: Readonly<ShallowRef<boolean>>;
+  hasError: Readonly<ShallowRef<boolean>>;
+  openFilePicker(): void;
+  selectFile(file: File): void;
+  setExternalUrl(url: string): boolean;
+  handleError(): void;
+}
+
+export function useEditableImage(
+  engine: CmsEngine,
+  options: EditableImageOptions,
+): EditableImageApi {
+  const target = { engine, ...options };
+  const view = readImageView(target);
+  const src = shallowRef(view.src);
+  const saving = shallowRef(view.saving);
+  const hasError = shallowRef(false);
+
+  const sync = () => {
+    const next = readImageView(target);
+    src.value = next.src;
+    saving.value = next.saving;
+  };
+  const stop = engine.subscribe(sync);
+  onScopeDispose(stop);
+
+  return {
+    src,
+    saving,
+    hasError,
+    openFilePicker() {
+      openImageFilePicker(target, (file) => {
+        hasError.value = false;
+        selectImageFile(target, file);
+      });
+    },
+    selectFile(file) {
+      hasError.value = false;
+      selectImageFile(target, file);
+    },
+    setExternalUrl(url) {
+      const accepted = setExternalImageUrl(target, url);
+      if (accepted) hasError.value = false;
+      return accepted;
+    },
+    handleError() {
+      hasError.value = true;
+    },
+  };
 }
 
 export interface ContentEditBinding {

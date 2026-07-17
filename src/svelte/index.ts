@@ -1,4 +1,10 @@
 import type { CmsEngine, CmsSnapshot, Item } from "better-content/core";
+import {
+  openImageFilePicker,
+  readImageView,
+  selectImageFile,
+  setExternalImageUrl,
+} from "../shared/image-edit";
 
 type Subscriber<T> = (value: T) => void;
 type Unsubscriber = () => void;
@@ -32,6 +38,77 @@ export function itemStore(
           run(next);
         }
       });
+    },
+  };
+}
+
+export interface ImageEditOptions {
+  collection: string;
+  itemId: string;
+  fieldKey: string;
+  accept?: string;
+}
+
+export interface ImageEditState {
+  src: string;
+  saving: boolean;
+  hasError: boolean;
+}
+
+export interface ImageEditStore extends Readable<ImageEditState> {
+  openFilePicker(): void;
+  selectFile(file: File): void;
+  setExternalUrl(url: string): boolean;
+  handleError(): void;
+}
+
+export function imageEdit(
+  engine: CmsEngine,
+  options: ImageEditOptions,
+): ImageEditStore {
+  const target = { engine, ...options };
+  let hasError = false;
+  const listeners = new Set<Subscriber<ImageEditState>>();
+
+  const state = (): ImageEditState => ({ ...readImageView(target), hasError });
+  const emit = () => {
+    const value = state();
+    for (const run of listeners) run(value);
+  };
+
+  return {
+    subscribe(run) {
+      run(state());
+      listeners.add(run);
+      const stop = engine.subscribe(() => run(state()));
+      return () => {
+        listeners.delete(run);
+        stop();
+      };
+    },
+    openFilePicker() {
+      openImageFilePicker(target, (file) => {
+        hasError = false;
+        selectImageFile(target, file);
+        emit();
+      });
+    },
+    selectFile(file) {
+      hasError = false;
+      selectImageFile(target, file);
+      emit();
+    },
+    setExternalUrl(url) {
+      const accepted = setExternalImageUrl(target, url);
+      if (accepted) {
+        hasError = false;
+        emit();
+      }
+      return accepted;
+    },
+    handleError() {
+      hasError = true;
+      emit();
     },
   };
 }

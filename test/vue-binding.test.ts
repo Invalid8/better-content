@@ -4,6 +4,7 @@ import { effectScope } from "vue";
 import {
   useCmsItem,
   useCmsSnapshot,
+  useEditableImage,
   vContentEdit,
   type ContentEditBinding,
 } from "../src/vue/index";
@@ -108,5 +109,64 @@ describe("vContentEdit directive", () => {
     engine.editField("sections", "hero", "heading", "Silent");
     expect(el.textContent).toBe("From outside");
     el.remove();
+  });
+});
+
+describe("useEditableImage", () => {
+  it("exposes reactive state and queues uploads through the engine", () => {
+    const engine = makeEngine();
+    const scope = effectScope();
+    const api = scope.run(() =>
+      useEditableImage(engine, {
+        collection: "sections",
+        itemId: "hero",
+        fieldKey: "cover",
+      }),
+    )!;
+
+    expect(api.src.value).toBe("");
+    engine.editField("sections", "hero", "cover", "https://a.test/pic.png");
+    expect(api.src.value).toBe("https://a.test/pic.png");
+
+    const urls = URL as unknown as { createObjectURL?: (b: Blob) => string };
+    const original = urls.createObjectURL;
+    urls.createObjectURL = () => "blob:preview";
+    try {
+      api.selectFile(new File(["x"], "pic.png", { type: "image/png" }));
+    } finally {
+      urls.createObjectURL = original;
+    }
+
+    expect(api.src.value).toBe("blob:preview");
+    expect(engine.getSnapshot().pendingImages).toMatchObject([
+      { fieldKey: "cover", localUrl: "blob:preview", isExternal: false },
+    ]);
+    scope.stop();
+  });
+
+  it("validates external URLs and tracks hasError", () => {
+    const engine = makeEngine();
+    const scope = effectScope();
+    const api = scope.run(() =>
+      useEditableImage(engine, {
+        collection: "sections",
+        itemId: "hero",
+        fieldKey: "cover",
+      }),
+    )!;
+
+    expect(api.setExternalUrl("nope")).toBe(false);
+    expect(engine.getSnapshot().pendingImages).toHaveLength(0);
+
+    api.handleError();
+    expect(api.hasError.value).toBe(true);
+
+    expect(api.setExternalUrl("https://b.test/pic.png")).toBe(true);
+    expect(api.hasError.value).toBe(false);
+    expect(engine.getSnapshot().pendingImages[0]).toMatchObject({
+      file: null,
+      isExternal: true,
+    });
+    scope.stop();
   });
 });
