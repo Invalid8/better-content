@@ -8,6 +8,8 @@ export default defineConfig({
     devtools: "src/devtools/index.ts",
     "devtools/react": "src/devtools/react.tsx",
     react: "src/react/index.ts",
+    svelte: "src/svelte/index.ts",
+    vue: "src/vue/index.ts",
     "adapters/postgres": "src/adapters/postgres/index.ts",
     "adapters/firestore": "src/adapters/firestore/index.ts",
     "storage/cloudinary": "src/storage/cloudinary/index.ts",
@@ -28,6 +30,7 @@ export default defineConfig({
     /^cloudinary$/,
     /^react(\/.+)?$/,
     /^react-dom(\/.+)?$/,
+    /^vue(\/.+)?$/,
   ],
   onSuccess: "node scripts/add-use-client.mjs",
 });

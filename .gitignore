@@ -2,6 +2,8 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+.astro/
+.vite/
 .env
 .env.*
 .DS_Store

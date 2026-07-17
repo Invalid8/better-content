@@ -1,0 +1,343 @@
+---
+import Base from "../layouts/Base.astro";
+import CodeTabs from "../components/CodeTabs.astro";
+import DatabaseRows from "../components/DatabaseRows.astro";
+import AdapterCalls from "../components/AdapterCalls.astro";
+import ReactPreviewFrame from "../components/react/PreviewFrame";
+import VuePreviewIsland from "../components/vue/PreviewIsland.vue";
+import SveltePreviewIsland from "../components/svelte/PreviewIsland.svelte";
+import { Check, Pencil } from "@lucide/astro";
+import { siReact, siSvelte, siVuedotjs } from "simple-icons";
+
+import engineSource from "../lib/engine.ts?raw";
+import pgliteAdapterSource from "../snippets/adapters/pglite.ts?raw";
+import memoryAdapterSource from "../snippets/adapters/memory.ts?raw";
+import restAdapterSource from "../snippets/adapters/rest.ts?raw";
+import reactPreviewSource from "../components/react/PreviewFrame.tsx?raw";
+import reactNoteSource from "../components/react/NoteCard.tsx?raw";
+import vuePreviewSource from "../components/vue/PreviewFrame.vue?raw";
+import sveltePreviewSource from "../components/svelte/PreviewFrame.svelte?raw";
+import vueNoteSource from "../components/vue/NoteCard.vue?raw";
+import svelteNoteSource from "../components/svelte/NoteCard.svelte?raw";
+---
+
+<Base
+  title="better-content playground"
+  description="A compact better-content playground showing the database, adapter, engine, and UI bindings on one editable screen."
+>
+  <main class="lab">
+    <div class="lab-controls" aria-label="Playground settings">
+      <label>
+        framework
+        <select id="framework-select">
+          <option value="react">React</option>
+          <option value="vue">Vue</option>
+          <option value="svelte">Svelte</option>
+        </select>
+      </label>
+      <label>
+        data adapter
+        <select id="adapter-select"></select>
+      </label>
+      <button class="btn ghost reset-action" type="button" id="reset-demo">
+        Reset data
+      </button>
+    </div>
+
+    <section class="lab-grid" aria-label="Editable playground">
+      <div
+        class="source-stack"
+        id="source"
+        data-active-framework="react"
+        data-active-adapter="memory"
+      >
+        <CodeTabs
+          label="Minimal setup"
+          files={[
+            { name: "setup.ts", code: engineSource, note: "engine", framework: "all" },
+            { name: "adapter.ts", code: pgliteAdapterSource, note: "pglite", framework: "all", adapter: "pglite" },
+            { name: "adapter.ts", code: memoryAdapterSource, note: "memory", framework: "all", adapter: "memory" },
+            { name: "adapter.ts", code: restAdapterSource, note: "rest", framework: "all", adapter: "rest" },
+            { name: "React.tsx", code: reactPreviewSource, note: "preview", framework: "react" },
+            { name: "Vue.vue", code: vuePreviewSource, note: "preview", framework: "vue" },
+            { name: "Svelte.svelte", code: sveltePreviewSource, note: "preview", framework: "svelte" },
+          ]}
+        />
+        <div class="source-foot">
+          <span>Adapter here is <strong id="active-adapter-name">PGlite</strong>.</span>
+          <button class="btn ghost compact-copy" type="button" id="copy-setup">
+            Copy minimal setup
+          </button>
+        </div>
+      </div>
+
+      <section
+        class="preview-panel"
+        id="preview"
+        data-active-framework="react"
+        aria-labelledby="preview-title"
+      >
+        <div class="panel-bar">
+          <span class="bar-label" id="preview-title">preview</span>
+          <span class="panel-meta"><i></i><span id="framework-meta">React · useSyncExternalStore</span></span>
+          <div class="preview-actions">
+            <button class="btn icon-btn" id="toggle-edit" aria-pressed="false" title="Edit">
+              <Pencil aria-hidden="true" size={16} stroke-width={1.8} />
+              <span class="sr-only">Edit</span>
+            </button>
+            <button class="btn primary icon-btn" id="save-all" disabled title="Save">
+              <Check aria-hidden="true" size={16} stroke-width={1.8} />
+              <span class="sr-only">Save</span>
+              <span class="dirty-dot" hidden></span>
+            </button>
+          </div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-island" data-preview-framework="react">
+            <ReactPreviewFrame client:only="react" />
+          </div>
+          <div class="preview-island" data-preview-framework="vue">
+            <VuePreviewIsland client:only="vue" />
+          </div>
+          <div class="preview-island" data-preview-framework="svelte">
+            <SveltePreviewIsland client:only="svelte" />
+          </div>
+        </div>
+        <p class="panel-note">Click any text while Edit is on. The edit runs through the adapter for real.</p>
+      </section>
+    </section>
+
+    <section class="data-grid" aria-label="Live data and adapter calls">
+      <DatabaseRows />
+      <AdapterCalls />
+    </section>
+
+    <section class="bindings" aria-labelledby="bindings-title">
+      <div class="bindings-head">
+        <div>
+          <p class="section-label">same core, many bindings</p>
+          <h2 id="bindings-title">One engine, component systems stay optional.</h2>
+          <p class="bindings-copy">
+            React, Vue, and Svelte are bindings around the same exposed core:
+            a snapshot store, a subscription method, and a seven-method adapter
+            contract. Any UI layer can wrap those primitives.
+          </p>
+        </div>
+        <div class="framework-grid" aria-label="Supported component systems">
+          <article class="framework-card react-card">
+            <svg class="brand-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d={siReact.path} />
+            </svg>
+            <strong>React</strong>
+            <span>Inline editing through useSyncExternalStore.</span>
+          </article>
+          <article class="framework-card vue-card">
+            <svg class="brand-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d={siVuedotjs.path} />
+            </svg>
+            <strong>Vue</strong>
+            <span>Composition-friendly access to the live snapshot.</span>
+          </article>
+          <article class="framework-card svelte-card">
+            <svg class="brand-icon" aria-hidden="true" viewBox="0 0 24 24">
+              <path d={siSvelte.path} />
+            </svg>
+            <strong>Svelte</strong>
+            <span>Store-style subscription without a new backend.</span>
+          </article>
+          <article class="framework-card more-card">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+            <strong>More</strong>
+            <span>Wrap getSnapshot and subscribe for any framework.</span>
+          </article>
+        </div>
+      </div>
+      <CodeTabs
+        label="Binding sources"
+        files={[
+          { name: "React", code: reactNoteSource },
+          { name: "Vue", code: vueNoteSource },
+          { name: "Svelte", code: svelteNoteSource },
+        ]}
+      />
+    </section>
+  </main>
+
+  <script is:inline>
+    (() => {
+      const frameworkSelect = document.getElementById("framework-select");
+      const sourceRoot = document.querySelector("#source");
+      const codeRoot = document.querySelector("#source .code-tabs");
+      const previewRoot = document.getElementById("preview");
+      const frameworkMetaLabel = document.getElementById("framework-meta");
+      const adapterKeys = new Set(["pglite", "memory", "rest"]);
+      const frameworkToSource = {
+        react: "react.tsx",
+        vue: "vue.vue",
+        svelte: "svelte.svelte",
+      };
+      const frameworkMeta = {
+        react: "React · useSyncExternalStore",
+        vue: "Vue · useCmsSnapshot",
+        svelte: "Svelte · store binding",
+      };
+      const allowedFrameworks = new Set(Object.keys(frameworkToSource));
+      const readAdapter = () => {
+        const hashAdapter = new URLSearchParams(
+          window.location.hash.slice(1),
+        ).get("adapter");
+        const storedAdapter = localStorage.getItem("bc-playground-adapter");
+        return adapterKeys.has(hashAdapter)
+          ? hashAdapter
+          : adapterKeys.has(storedAdapter)
+            ? storedAdapter
+            : "memory";
+      };
+
+      if (frameworkSelect) {
+        const hashFramework = new URLSearchParams(
+          window.location.hash.slice(1),
+        ).get("framework");
+        if (hashFramework && allowedFrameworks.has(hashFramework)) {
+          frameworkSelect.value = hashFramework;
+        }
+      }
+
+      const writeFrameworkHash = () => {
+        if (!frameworkSelect) return;
+        const params = new URLSearchParams(window.location.hash.slice(1));
+        params.set("framework", frameworkSelect.value.toLowerCase());
+        history.replaceState(null, "", `#${params.toString()}`);
+      };
+
+      const selectFrameworkSource = () => {
+        if (!frameworkSelect || !sourceRoot || !codeRoot) return;
+        const framework = frameworkSelect.value.toLowerCase();
+        const adapter = readAdapter();
+        const sourceName = frameworkToSource[framework] ?? frameworkToSource.react;
+        sourceRoot.dataset.activeFramework = framework;
+        sourceRoot.dataset.activeAdapter = adapter;
+        if (previewRoot) previewRoot.dataset.activeFramework = framework;
+        if (frameworkMetaLabel) {
+          frameworkMetaLabel.textContent = frameworkMeta[framework] ?? frameworkMeta.react;
+        }
+        for (const node of codeRoot.querySelectorAll("[data-code-framework]")) {
+          const itemFramework = node.dataset.codeFramework;
+          const itemAdapter = node.dataset.codeAdapter;
+          node.hidden =
+            (itemFramework !== "all" && itemFramework !== framework) ||
+            (itemAdapter !== "all" && itemAdapter !== adapter);
+        }
+        for (const tab of codeRoot.querySelectorAll("[data-code-tab]")) {
+          tab.setAttribute(
+            "aria-selected",
+            String(tab.dataset.codeName === sourceName),
+          );
+        }
+        for (const panel of codeRoot.querySelectorAll("[data-code-panel]")) {
+          panel.hidden = panel.dataset.codeName !== sourceName;
+        }
+      };
+
+      selectFrameworkSource();
+      frameworkSelect?.addEventListener("change", () => {
+        selectFrameworkSource();
+        writeFrameworkHash();
+      });
+    })();
+  </script>
+
+  <script>
+    import {
+      activeAdapterId,
+      adapter,
+      adapterOptions,
+      resetDemo,
+      setAdapter,
+    } from "../lib/db";
+    import { ready } from "../lib/engine";
+    import {
+      registerDataInspector,
+      type DataInspectorElement,
+    } from "better-content/devtools";
+
+    registerDataInspector();
+    const inspector =
+      (document.querySelector(
+        "better-content-inspector",
+      ) as DataInspectorElement | null) ??
+      (document.createElement(
+        "better-content-inspector",
+      ) as DataInspectorElement);
+    inspector.collections = ["page", "cards"];
+    inspector.adapter = adapter;
+    if (!inspector.isConnected) document.body.append(inspector);
+    void ready.then((engine) => {
+      inspector.engine = engine;
+    });
+
+    const adapterSelect = document.getElementById(
+      "adapter-select",
+    ) as HTMLSelectElement | null;
+    const activeAdapterName = document.getElementById("active-adapter-name");
+
+    if (adapterSelect) {
+      for (const option of adapterOptions) {
+        const item = document.createElement("option");
+        item.value = option.id;
+        item.textContent = option.label;
+        item.selected = option.id === activeAdapterId;
+        adapterSelect.append(item);
+      }
+      const active = adapterOptions.find((option) => option.id === activeAdapterId);
+      if (activeAdapterName && active) activeAdapterName.textContent = active.label;
+      adapterSelect.addEventListener("change", () => {
+        setAdapter(adapterSelect.value as typeof activeAdapterId);
+      });
+    }
+
+    document
+      .getElementById("reset-demo")
+      ?.addEventListener("click", () => void resetDemo());
+
+    // Only PGlite persists across reloads, so only it earns the manual
+    // Edit -> Save flow. The volatile adapters save automatically on
+    // change and hide the Save button.
+    if (activeAdapterId !== "pglite") {
+      document.getElementById("save-all")?.setAttribute("hidden", "");
+      const panelNote = document.querySelector(".panel-note");
+      if (panelNote) {
+        panelNote.textContent =
+          "Click any text while Edit is on. This adapter is volatile, so edits save automatically the moment you click away.";
+      }
+      void ready.then((engine) => {
+        let timer: number | undefined;
+        engine.subscribe(() => {
+          const { hasUnsavedChanges, saving } = engine.getSnapshot();
+          if (hasUnsavedChanges && !saving) {
+            clearTimeout(timer);
+            timer = window.setTimeout(() => void engine.saveAll(), 300);
+          }
+        });
+      });
+    }
+
+    document.getElementById("copy-setup")?.addEventListener("click", (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      const text = `import { createCmsEngine, adapterTransport } from "better-content/core";
+import { adapter } from "./adapter";
+
+export const engine = createCmsEngine({
+  transport: adapterTransport(adapter),
+  initialItems,
+});`;
+      void navigator.clipboard?.writeText(text).then(() => {
+        button.textContent = "Copied";
+        setTimeout(() => (button.textContent = "Copy minimal setup"), 1200);
+      });
+    });
+  </script>
+</Base>

@@ -5,16 +5,20 @@ The React binding. Ships with `"use client"` directives; React 18 or newer.
 ## PageProvider
 
 ```tsx
-interface PageProviderProps extends CmsEngineOptions {
-  children: ReactNode;
-}
+type PageProviderProps = { children: ReactNode } & (
+  | ({ engine: CmsEngine } & Partial<CmsEngineOptions>)  // bind an external engine
+  | ({ engine?: undefined } & CmsEngineOptions)          // or create one from options
+);
 
 <PageProvider transport={...} storage={...} notify={...} initialItems={...}>
+<PageProvider engine={sharedEngine}>
 ```
 
-Creates one engine for its lifetime and provides both contexts. All
-`CmsEngineOptions` are captured at mount; changing props later does not
-recreate the engine (remount with a `key` if you need to).
+Creates one engine for its lifetime and provides both contexts, or binds an
+engine you created with `createCmsEngine` — the way to share one engine
+across multiple React roots or across frameworks (e.g. Astro islands). All
+props are captured at mount; changing them later does not recreate or swap
+the engine (remount with a `key` if you need to).
 
 ## Hooks
 

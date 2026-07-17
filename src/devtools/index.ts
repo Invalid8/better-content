@@ -46,18 +46,34 @@ dialog {
   color: var(--bc-ink);
   font: inherit;
 }
+dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+dialog.expanded {
+  width: calc(100vw - 2rem);
+  height: calc(100vh - 2rem);
+  max-height: calc(100vh - 2rem);
+}
 dialog::backdrop { background: rgba(20, 24, 30, 0.45); }
 .head {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 0 0 auto;
   padding: 12px 24px;
   border-bottom: 1px solid var(--bc-line);
 }
 .head .title { color: var(--bc-accent); font-weight: 500; }
 .head .count { color: var(--bc-col); }
-.close {
+.head-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.close,
+.expand {
   background: none;
   border: 1px solid var(--bc-line);
   border-radius: 6px;
@@ -66,11 +82,14 @@ dialog::backdrop { background: rgba(20, 24, 30, 0.45); }
   padding: 3px 10px;
   cursor: pointer;
 }
-.close:hover { border-color: var(--bc-ink); }
+.close:hover,
+.expand:hover { border-color: var(--bc-ink); }
 .tables {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 16px 24px 20px;
   overflow-y: auto;
 }
@@ -93,6 +112,7 @@ th, td {
 }
 th { color: var(--bc-col); font-size: 12px; }
 .hint {
+  flex: 0 0 auto;
   padding: 0 24px 20px;
   margin: 0;
   color: var(--bc-dim);
@@ -128,6 +148,8 @@ export function registerDataInspector(
     #fabCount: HTMLElement;
     #headCount: HTMLElement;
     #tablesBox: HTMLElement;
+    #expandButton: HTMLButtonElement;
+    #scrollRestore: { html: string; body: string } | null = null;
 
     constructor() {
       super();
@@ -146,7 +168,10 @@ export function registerDataInspector(
         <div class="head">
           <span class="title">▤ your database</span>
           <span class="count"></span>
-          <button class="close" aria-label="Close">✕</button>
+          <span class="head-actions">
+            <button class="expand" type="button" aria-pressed="false">Full page</button>
+            <button class="close" type="button" aria-label="Close">✕</button>
+          </span>
         </div>
         <div class="tables"></div>
         <p class="hint">Live rows read through the DataAdapter. Only mount this element in development.</p>
@@ -154,9 +179,12 @@ export function registerDataInspector(
       this.#dialog.addEventListener("click", (e) => {
         if (e.target === this.#dialog) this.#close();
       });
+      this.#dialog.addEventListener("close", () => this.#setPageScrollLocked(false));
       this.#dialog
         .querySelector(".close")!
         .addEventListener("click", () => this.#close());
+      this.#expandButton = this.#dialog.querySelector(".expand")!;
+      this.#expandButton.addEventListener("click", () => this.#toggleExpanded());
 
       root.append(style, fab, this.#dialog);
       this.#fabCount = fab.querySelector(".count")!;
@@ -210,6 +238,7 @@ export function registerDataInspector(
     disconnectedCallback() {
       this.#unsubscribe?.();
       this.#unsubscribe = null;
+      this.#setPageScrollLocked(false);
     }
 
     async refresh(): Promise<void> {
@@ -232,6 +261,7 @@ export function registerDataInspector(
       } else {
         this.#dialog.setAttribute("open", "");
       }
+      this.#syncPageScrollLock();
     }
 
     #close() {
@@ -240,6 +270,41 @@ export function registerDataInspector(
       } else {
         this.#dialog.removeAttribute("open");
       }
+      this.#setPageScrollLocked(false);
+    }
+
+    #toggleExpanded() {
+      const expanded = !this.#dialog.classList.contains("expanded");
+      this.#dialog.classList.toggle("expanded", expanded);
+      this.#expandButton.textContent = expanded ? "Default size" : "Full page";
+      this.#expandButton.setAttribute("aria-pressed", String(expanded));
+      this.#syncPageScrollLock();
+    }
+
+    #syncPageScrollLock() {
+      this.#setPageScrollLocked(
+        this.#dialog.open && this.#dialog.classList.contains("expanded"),
+      );
+    }
+
+    #setPageScrollLocked(locked: boolean) {
+      const root = document.documentElement;
+      const body = document.body;
+      if (locked) {
+        if (this.#scrollRestore) return;
+        this.#scrollRestore = {
+          html: root.style.overflow,
+          body: body.style.overflow,
+        };
+        root.style.overflow = "hidden";
+        body.style.overflow = "hidden";
+        return;
+      }
+
+      if (!this.#scrollRestore) return;
+      root.style.overflow = this.#scrollRestore.html;
+      body.style.overflow = this.#scrollRestore.body;
+      this.#scrollRestore = null;
     }
 
     #render() {

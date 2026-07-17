@@ -24,6 +24,8 @@ export default defineConfig({
             { text: "How the engine works", link: "/guide/how-it-works" },
             { text: "The editing model", link: "/guide/editing-model" },
             { text: "React binding", link: "/guide/react-binding" },
+            { text: "Svelte binding", link: "/guide/svelte-binding" },
+            { text: "Vue binding", link: "/guide/vue-binding" },
             { text: "Transports", link: "/guide/transports" },
             { text: "Database adapters", link: "/guide/adapters" },
             { text: "Auth and the admin gate", link: "/guide/auth" },
@@ -38,6 +40,8 @@ export default defineConfig({
           items: [
             { text: "better-content/core", link: "/api/core" },
             { text: "better-content/react", link: "/api/react" },
+            { text: "better-content/svelte", link: "/api/svelte" },
+            { text: "better-content/vue", link: "/api/vue" },
             { text: "better-content/server", link: "/api/server" },
             { text: "Adapters", link: "/api/adapters" },
             { text: "Storage", link: "/api/storage" },

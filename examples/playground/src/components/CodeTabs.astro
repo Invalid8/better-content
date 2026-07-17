@@ -1,0 +1,108 @@
+---
+export interface CodeFile {
+  name: string;
+  code: string;
+  note?: string;
+  framework?: "all" | "react" | "vue" | "svelte";
+  adapter?: "all" | "pglite" | "memory" | "rest";
+}
+
+const { files, label } = Astro.props as { files: CodeFile[]; label?: string };
+
+const escapeHtml = (code: string) =>
+  code
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+const highlight = (code: string) => {
+  const escaped = escapeHtml(code.trimEnd());
+  const token =
+    /(\/\/.*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b(?:import|from|export|const|let|function|return|type|interface|class|extends|async|await|new|if|else|for|of|in|as|null|undefined|true|false|override|private|protected)\b|\b[A-Z][A-Za-z0-9_]*\b|\b\d+(?:\.\d+)?\b)/g;
+  return escaped.replace(token, (match) => {
+    if (match.startsWith("//") || match.startsWith("/*")) {
+      return `<span class="tok-comment">${match}</span>`;
+    }
+    if (
+      match.startsWith('"') ||
+      match.startsWith("'") ||
+      match.startsWith("`")
+    ) {
+      return `<span class="tok-string">${match}</span>`;
+    }
+    if (/^\d/.test(match)) return `<span class="tok-number">${match}</span>`;
+    if (/^[A-Z]/.test(match)) return `<span class="tok-type">${match}</span>`;
+    return `<span class="tok-keyword">${match}</span>`;
+  });
+};
+---
+
+<div class="code-tabs">
+  <div class="code-tabs-bar" role="tablist" aria-label={label ?? "Source files"}>
+    {
+      files.map((file, index) => (
+        <button
+          class="code-tab"
+          type="button"
+          role="tab"
+          aria-selected={index === 0 ? "true" : "false"}
+          data-code-tab={String(index)}
+          data-code-name={file.name.toLowerCase()}
+          data-code-framework={file.framework ?? "all"}
+          data-code-adapter={file.adapter ?? "all"}
+        >
+          {file.name}
+          {file.note && <span>{file.note}</span>}
+        </button>
+      ))
+    }
+    <button class="code-copy" type="button" data-code-copy>copy</button>
+  </div>
+  {
+    files.map((file, index) => (
+      <pre
+        class="code-view"
+        data-code-panel={String(index)}
+        data-code-name={file.name.toLowerCase()}
+        data-code-framework={file.framework ?? "all"}
+        data-code-adapter={file.adapter ?? "all"}
+        hidden={index !== 0}
+        tabindex="0"
+        aria-label={`${file.name} source`}
+      ><code set:html={highlight(file.code)} /></pre>
+    ))
+  }
+</div>
+
+<script>
+  // One delegated handler serves every CodeTabs instance on the page.
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+
+    const tab = target.closest<HTMLElement>("[data-code-tab]");
+    if (tab) {
+      const root = tab.closest(".code-tabs")!;
+      const index = tab.dataset.codeTab;
+      for (const button of root.querySelectorAll<HTMLElement>("[data-code-tab]")) {
+        const active = button === tab;
+        button.setAttribute("aria-selected", String(active));
+      }
+      for (const panel of root.querySelectorAll<HTMLElement>("[data-code-panel]")) {
+        panel.hidden = panel.dataset.codePanel !== index;
+      }
+      return;
+    }
+
+    const copy = target.closest<HTMLElement>("[data-code-copy]");
+    if (copy) {
+      const root = copy.closest(".code-tabs")!;
+      const panel = root.querySelector<HTMLElement>("[data-code-panel]:not([hidden])");
+      void navigator.clipboard
+        ?.writeText(panel?.textContent ?? "")
+        .then(() => {
+          copy.textContent = "copied";
+          setTimeout(() => (copy.textContent = "copy"), 1200);
+        });
+    }
+  });
+</script>

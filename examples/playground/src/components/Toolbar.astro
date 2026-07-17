@@ -1,0 +1,89 @@
+---
+import { BookOpen } from "@lucide/astro";
+import { siGithub } from "simple-icons";
+---
+
+<header class="toolbar" id="top">
+  <div class="toolbar-inner">
+    <a class="brand" href="/">
+      <img src="/logo.svg" alt="" aria-hidden="true" />
+      <span>better-content</span>
+      <em>playground</em>
+    </a>
+
+    <p class="toolbar-status" id="toolbar-status" role="status"></p>
+
+    <div class="toolbar-actions">
+      <a
+        class="btn ghost icon-btn"
+        href="https://github.com/Invalid8/better-content"
+        target="_blank"
+        rel="noreferrer"
+        title="GitHub"
+      >
+        <svg class="brand-icon" aria-hidden="true" viewBox="0 0 24 24">
+          <path d={siGithub.path} />
+        </svg>
+        <span class="sr-only">GitHub</span>
+      </a>
+      <a
+        class="btn ghost icon-btn"
+        href="https://better-content-docs.vercel.app"
+        target="_blank"
+        rel="noreferrer"
+        title="Docs"
+      >
+        <BookOpen aria-hidden="true" size={16} stroke-width={1.8} />
+        <span class="sr-only">Docs</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { ready } from "../lib/engine";
+  import { editMode } from "../lib/editMode";
+  import { statusStore } from "../lib/status";
+
+  const editButton = document.getElementById(
+    "toggle-edit",
+  ) as HTMLButtonElement | null;
+  const saveButton = document.getElementById(
+    "save-all",
+  ) as HTMLButtonElement | null;
+  const dirtyDot = saveButton?.querySelector(".dirty-dot") as HTMLElement | null;
+  const status = document.getElementById("toolbar-status")!;
+
+  // Edit toggle: a framework-free store, shared with every island.
+  const renderEditState = () => {
+    if (!editButton) return;
+    const editing = editMode.get();
+    editButton.title = editing ? "Editing" : "Edit";
+    editButton.setAttribute("aria-pressed", String(editing));
+    editButton.classList.toggle("editing", editing);
+  };
+  editButton?.addEventListener("click", editMode.toggle);
+  editMode.subscribe(renderEditState);
+  renderEditState();
+
+  // Status line: fed by the engine's notify seam.
+  const renderStatus = () => {
+    status.textContent = statusStore.get();
+  };
+  statusStore.subscribe(renderStatus);
+  renderStatus();
+
+  // Save button: no framework needed, just getSnapshot + subscribe.
+  void ready.then((engine) => {
+    const render = () => {
+      if (!saveButton) return;
+      const { hasUnsavedChanges, saving } = engine.getSnapshot();
+      saveButton.disabled = !hasUnsavedChanges || saving;
+      saveButton.title = saving ? "Saving" : "Save";
+      if (dirtyDot) dirtyDot.hidden = !hasUnsavedChanges || saving;
+    };
+    saveButton?.addEventListener("click", () => void engine.saveAll());
+    engine.subscribe(render);
+    render();
+  });
+</script>

@@ -5,7 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-07-17
+
+### Added
+
+- `PageProvider` accepts an optional `engine` prop to bind an
+  externally created engine, enabling one engine shared across multiple
+  React roots or across frameworks (e.g. Astro islands).
+- `better-content/vue`: a Vue 3 binding. `useCmsSnapshot(engine)` and
+  `useCmsItem(engine, collection, id)` composables (shallow refs, scope-aware
+  cleanup, identity-based granularity) and the `vContentEdit` directive for
+  inline text editing with the shared draft, multi-line, and `data-cms-*`
+  behavior. Vue is an optional peer.
+- `better-content/svelte`: a Svelte binding with zero dependency on the
+  svelte package. `engineStore(engine)` and `itemStore(engine, collection,
+  id)` implement the readable-store contract (`itemStore` emits only when
+  its item changes); the `contentEdit` element action provides inline text
+  editing with the same draft, multi-line, and `data-cms-*` behavior as the
+  React primitive. Works with Svelte 4 and 5.
+- Image editing in the Vue and Svelte bindings, matching the React
+  `EditableImage` semantics: picking a file previews it via an object URL
+  and queues a pending upload that flushes on save; external URLs are
+  validated (http/https) and queued without a file. Vue gets the
+  `useEditableImage(engine, { collection, itemId, fieldKey })` composable
+  (reactive `src`/`saving`/`hasError` plus `openFilePicker`, `selectFile`,
+  `setExternalUrl`, `handleError`); Svelte gets `imageEdit(engine, options)`,
+  a readable store with the same methods.
+
+### Changed
+
+- The `better-content/devtools` inspector dialog gained a "Full page"
+  toggle that expands it to the viewport and locks page scroll while
+  expanded.
 
 ## [0.2.0] - 2026-07-15
 
@@ -77,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.3.0]: https://github.com/Invalid8/better-content/releases/tag/v0.3.0
 [0.1.0]: https://github.com/Invalid8/better-content/releases/tag/v0.1.0
 [0.2.0]: https://github.com/Invalid8/better-content/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Invalid8/better-content/releases/tag/v0.1.1
