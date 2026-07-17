@@ -128,7 +128,7 @@ describe("useEditableImage", () => {
     engine.editField("sections", "hero", "cover", "https://a.test/pic.png");
     expect(api.src.value).toBe("https://a.test/pic.png");
 
-    const urls = URL as unknown as { createObjectURL?: (b: Blob) => string };
+    const urls = URL as unknown as { createObjectURL: ((b: Blob) => string) | undefined };
     const original = urls.createObjectURL;
     urls.createObjectURL = () => "blob:preview";
     try {
