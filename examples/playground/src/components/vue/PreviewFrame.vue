@@ -1,11 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { CmsEngine, Item } from "better-content/core";
-import { useCmsSnapshot, vContentEdit } from "better-content/vue";
+import {
+  useCmsSnapshot,
+  useEditableImage,
+  vContentEdit,
+} from "better-content/vue";
 
 const props = defineProps<{ engine: CmsEngine; editing: boolean }>();
 const snapshot = useCmsSnapshot(props.engine);
 const draggingId = ref<string | null>(null);
+
+const { src: cover, openFilePicker } = useEditableImage(props.engine, {
+  collection: "page",
+  itemId: "hero",
+  fieldKey: "cover",
+});
 
 const cards = computed(() =>
   [...(snapshot.value.items.cards ?? [])].sort(
@@ -30,6 +40,10 @@ const add = () =>
     body: "I was just INSERTed. Click me in edit mode, then check the inspector.",
     order: cards.value.length,
   });
+
+const openImagePicker = () => {
+  if (props.editing) openFilePicker();
+};
 </script>
 
 <template>
@@ -56,6 +70,16 @@ const add = () =>
         }"
       ></p>
     </div>
+
+    <figure
+      class="hero-cover"
+      :data-editing="editing || undefined"
+      @click="openImagePicker"
+    >
+      <img v-if="cover" :src="cover" alt="Editable content cover" />
+      <div v-else class="cover-empty">cover image</div>
+      <figcaption v-if="editing">click to replace the image</figcaption>
+    </figure>
 
     <div class="cards-board">
       <div class="cards-grid">

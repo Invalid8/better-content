@@ -1,11 +1,16 @@
 <script lang="ts">
   import type { CmsEngine, Item } from "better-content/core";
-  import { contentEdit, engineStore } from "better-content/svelte";
+  import { contentEdit, engineStore, imageEdit } from "better-content/svelte";
 
   export let engine: CmsEngine;
   export let editing: boolean;
 
   const snapshot = engineStore(engine);
+  const cover = imageEdit(engine, {
+    collection: "page",
+    itemId: "hero",
+    fieldKey: "cover",
+  });
   let draggingId: string | null = null;
 
   $: cards = [...($snapshot.items.cards ?? [])].sort(
@@ -30,6 +35,10 @@
       body: "I was just INSERTed. Click me in edit mode, then check the inspector.",
       order: cards.length,
     });
+
+  const openImagePicker = () => {
+    if (editing) cover.openFilePicker();
+  };
 </script>
 
 <div class="hero-live">
@@ -55,6 +64,21 @@
       }}
     ></p>
   </div>
+
+  <figure
+    class="hero-cover"
+    data-editing={editing || undefined}
+    on:click={openImagePicker}
+  >
+    {#if $cover.src}
+      <img src={$cover.src} alt="Editable content cover" />
+    {:else}
+      <div class="cover-empty">cover image</div>
+    {/if}
+    {#if editing}
+      <figcaption>click to replace the image</figcaption>
+    {/if}
+  </figure>
 
   <div class="cards-board">
     <div class="cards-grid">

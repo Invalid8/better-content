@@ -4,6 +4,7 @@ export interface CodeFile {
   code: string;
   note?: string;
   framework?: "all" | "react" | "vue" | "svelte";
+  adapter?: "all" | "pglite" | "memory" | "rest";
 }
 
 const { files, label } = Astro.props as { files: CodeFile[]; label?: string };
@@ -48,6 +49,7 @@ const highlight = (code: string) => {
           data-code-tab={String(index)}
           data-code-name={file.name.toLowerCase()}
           data-code-framework={file.framework ?? "all"}
+          data-code-adapter={file.adapter ?? "all"}
         >
           {file.name}
           {file.note && <span>{file.note}</span>}
@@ -63,6 +65,7 @@ const highlight = (code: string) => {
         data-code-panel={String(index)}
         data-code-name={file.name.toLowerCase()}
         data-code-framework={file.framework ?? "all"}
+        data-code-adapter={file.adapter ?? "all"}
         hidden={index !== 0}
         tabindex="0"
         aria-label={`${file.name} source`}

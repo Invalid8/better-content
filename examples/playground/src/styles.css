@@ -330,6 +330,7 @@ pre code {
 
 .lab-controls {
   display: flex;
+  align-items: flex-end;
   gap: 0.7rem;
   align-self: flex-start;
 }
@@ -367,6 +368,10 @@ pre code {
   letter-spacing: 0;
   padding: 0.35rem 2.2rem 0.35rem 0.7rem;
   text-transform: none;
+}
+
+.reset-action {
+  min-height: 2rem;
 }
 
 .flow {
@@ -459,6 +464,21 @@ pre code {
 .source-stack[data-active-framework="svelte"]
   [data-code-framework]:not([data-code-framework="all"]):not(
     [data-code-framework="svelte"]
+  ) {
+  display: none !important;
+}
+
+.source-stack[data-active-adapter="pglite"]
+  [data-code-adapter]:not([data-code-adapter="all"]):not(
+    [data-code-adapter="pglite"]
+  ),
+.source-stack[data-active-adapter="memory"]
+  [data-code-adapter]:not([data-code-adapter="all"]):not(
+    [data-code-adapter="memory"]
+  ),
+.source-stack[data-active-adapter="rest"]
+  [data-code-adapter]:not([data-code-adapter="all"]):not(
+    [data-code-adapter="rest"]
   ) {
   display: none !important;
 }
@@ -590,20 +610,18 @@ pre code {
   font-size: 0.98rem;
 }
 
-.preview-panel .hero-cover {
-  display: none;
-}
-
 .hero-cover {
+  position: relative;
   margin: 1rem 0 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
+  background: var(--panel-soft);
 }
 
 .hero-cover img,
 .cover-empty {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 5;
   width: 100%;
   object-fit: cover;
 }
@@ -613,6 +631,25 @@ pre code {
   place-items: center;
   color: var(--muted);
   font-family: var(--mono);
+}
+
+.hero-cover[data-editing] {
+  cursor: pointer;
+  outline: 1px dashed var(--accent);
+  outline-offset: -0.35rem;
+}
+
+.hero-cover figcaption {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  padding: 0.24rem 0.5rem;
 }
 
 .cards-board {
@@ -650,7 +687,6 @@ pre code {
   font-size: 0.84rem;
 }
 
-.preview-panel .board-card:nth-child(n + 3),
 .preview-panel .board-hint {
   display: none;
 }
