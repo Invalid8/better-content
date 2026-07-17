@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `setExternalUrl`, `handleError`); Svelte gets `imageEdit(engine, options)`,
   a readable store with the same methods.
 
+### Changed
+
+- The `better-content/devtools` inspector dialog gained a "Full page"
+  toggle that expands it to the viewport and locks page scroll while
+  expanded.
+
 ## [0.2.0] - 2026-07-15
 
 ### Added
