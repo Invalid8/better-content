@@ -4,7 +4,7 @@ layout: home
 hero:
   name: better-content
   text: Edit your pages. Keep your data.
-  tagline: An inline-edit CMS engine that persists to your own database through a small adapter seam. Framework-agnostic core, React binding, MIT.
+  tagline: An inline-edit CMS engine that persists to your own database through a small adapter seam. Framework-agnostic core with React, Vue, and Svelte bindings, MIT.
   image:
     src: /logo.svg
     alt: better-content
@@ -25,7 +25,7 @@ features:
   - title: Inline editing first
     details: Headless contentEditable primitives with data-cms-* styling hooks. Visitors edit the live page, not an admin panel.
   - title: Framework-agnostic engine
-    details: The core is a plain external store, getSnapshot and subscribe. React binds to it in one small file. Nothing in core imports a framework.
+    details: The core is a plain external store, getSnapshot and subscribe. React, Vue, and Svelte bind to it as thin adapters, and one engine can serve all three on the same page. Nothing in core imports a framework.
   - title: Every seam has a name
     details: Transport, DataAdapter, StorageAdapter, AuthAdapter. Swap REST for direct adapter calls, Postgres for Firestore, without touching the engine.
   - title: Deferred edits, optimistic ops
