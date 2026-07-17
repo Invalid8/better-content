@@ -171,7 +171,7 @@ describe("imageEdit", () => {
   });
 
   it("selectFile previews via an object URL and queues a pending upload", () => {
-    const urls = URL as unknown as { createObjectURL?: (b: Blob) => string };
+    const urls = URL as unknown as { createObjectURL: ((b: Blob) => string) | undefined };
     const original = urls.createObjectURL;
     urls.createObjectURL = () => "blob:preview";
     try {
