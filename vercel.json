@@ -1,6 +1,0 @@
-{
-  "framework": "astro",
-  "installCommand": "npm install && npm install --prefix examples/playground",
-  "buildCommand": "npm run build --prefix examples/playground",
-  "outputDirectory": "examples/playground/dist"
-}
