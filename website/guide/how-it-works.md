@@ -31,8 +31,9 @@ interface Store {
 
 This is the same contract Zustand, Redux, and TanStack Store use, and it is
 the entire reason the core is framework-agnostic. React binds to it with the
-built-in `useSyncExternalStore`. Vue could bind `subscribe` to a
-`shallowRef`. Svelte could wrap it as a readable store. The engine neither
+built-in `useSyncExternalStore`, Vue binds `subscribe` to a `shallowRef`,
+and Svelte wraps it in the readable-store contract; all three ship as
+bindings, and one engine can serve them all at once. The engine neither
 knows nor cares.
 
 The internal rule that keeps this honest: **if a line of code could not run
