@@ -40,6 +40,8 @@ export default defineConfig({
           items: [
             { text: "better-content/core", link: "/api/core" },
             { text: "better-content/react", link: "/api/react" },
+            { text: "better-content/svelte", link: "/api/svelte" },
+            { text: "better-content/vue", link: "/api/vue" },
             { text: "better-content/server", link: "/api/server" },
             { text: "Adapters", link: "/api/adapters" },
             { text: "Storage", link: "/api/storage" },

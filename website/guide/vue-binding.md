@@ -89,8 +89,39 @@ and pass it into `createCmsEngine` as `initialItems`. Mount the API with
 `createCmsHandlers` in a server route; the handlers speak web-standard
 Request/Response, which Nitro (Nuxt's server) supports natively.
 
+## Image editing
+
+`useEditableImage` returns reactive state plus methods, with the same
+semantics as React's `EditableImage`: picking a file previews it
+immediately via an object URL and queues a pending upload that the engine
+flushes on save; external URLs are validated as http(s) and queued without
+a file.
+
+```vue
+<script setup lang="ts">
+import { useEditableImage } from "better-content/vue";
+import { engine } from "@/lib/cms";
+
+const { src, openFilePicker, handleError } = useEditableImage(engine, {
+  collection: "sections",
+  itemId: "hero",
+  fieldKey: "cover",
+});
+</script>
+
+<template>
+  <figure @click="openFilePicker">
+    <img v-if="src" :src="src" alt="Cover" @error="handleError" />
+    <span v-else>no cover yet</span>
+  </figure>
+</template>
+```
+
+Give the engine a `storage` adapter (see [Image storage](/guide/storage)),
+or file uploads have nowhere to go when the save flushes.
+
 ## What is intentionally not here
 
-Image and markdown editing ship as React components today; on Vue, drive the
-engine directly (`engine.setPendingImage`, operations) or write your own
-directive using `vContentEdit`'s source as the pattern.
+Markdown editing ships as a React hook today; on Vue, drive the engine
+directly or write your own directive using `vContentEdit`'s source as the
+pattern.

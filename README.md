@@ -17,8 +17,9 @@ in your browser, every field persists to a real Postgres running in your tab.
 
 Edit content directly on your live pages. Changes persist to **your** database
 through a small adapter seam, with no hosted service, no lock-in, and no
-proprietary backend. The engine is a framework-free external store; React is
-the first binding.
+proprietary backend. The engine is a framework-free external store with
+React, Vue, and Svelte bindings, and one engine can serve all three at once
+(e.g. Astro islands).
 
 > **Status: pre-1.0.** The API is still settling; minor versions may break
 > until 1.0. Two adapters (Postgres, Firestore), one storage provider
@@ -32,7 +33,8 @@ the first binding.
   it works for apps, not just static sites.
 - **Framework-agnostic core** — the engine is `getSnapshot()`/`subscribe()`
   (the same seam Zustand and Redux use). `better-content/core` imports zero
-  framework code; bindings are thin adapters.
+  framework code; the React, Vue, and Svelte bindings are thin adapters over
+  the same engine.
 - **Inline editing as the primary UX** — headless `contentEditable` primitives
   with `data-cms-*` styling hooks. No admin panel required.
 - **Transport-agnostic** — the engine speaks a 3-method `Transport`
@@ -127,8 +129,8 @@ It is a framework-free custom element underneath
 |---|---|---|
 | `better-content/core` | engine, `Transport` (`restTransport`, `adapterTransport`, `inMemoryTransport`), types | anywhere |
 | `better-content/react` | `PageProvider`, `ContentEditSpan`, `EditableImage`, `useCmsItem`, `useMarkdownEditor`, auth context | client |
-| `better-content/svelte` | `engineStore`, `itemStore`, `contentEdit` action | client |
-| `better-content/vue` | `useCmsSnapshot`, `useCmsItem`, `vContentEdit` directive | client |
+| `better-content/svelte` | `engineStore`, `itemStore`, `contentEdit` action, `imageEdit` | client |
+| `better-content/vue` | `useCmsSnapshot`, `useCmsItem`, `vContentEdit` directive, `useEditableImage` | client |
 | `better-content/devtools` | `<better-content-inspector>` custom element: live database view for development | client |
 | `better-content/devtools/react` | typed `DataInspector` React wrapper for the element | client |
 | `better-content/server` | `createCmsHandlers`, `createAdminGate`, `loadItemMap`, `resolveRelations` | server |
@@ -171,8 +173,10 @@ npm test          # vitest (in-memory transport + PGlite — no infra needed)
 npm run build     # tsup: ESM + CJS + .d.ts per subpath
 ```
 
-The `examples/playground` Vite app runs the full stack (engine → REST →
-handlers → Postgres-on-PGlite) with `npm run dev` and zero external services.
+The `examples/playground` Astro app is the live demo: React, Vue, and
+Svelte islands editing one shared engine, persisted to Postgres running in
+the browser (PGlite), with swappable adapters. `npm run dev` there runs it
+with zero external services.
 
 ## License & positioning
 

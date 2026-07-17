@@ -20,7 +20,8 @@ A framework-free custom element rendering a floating button and a dialog of
 live collection tables. Styles live in shadow DOM; the element carries zero
 runtime dependencies. Setting `engine` subscribes to it (refreshing after
 each completed save) and unsubscribes when the element disconnects or the
-property is cleared.
+property is cleared. The dialog head has a "Full page" toggle that expands
+the inspector to the viewport and locks page scroll while expanded.
 
 ```html
 <better-content-inspector collections="sections,posts"></better-content-inspector>

@@ -27,6 +27,16 @@ The provider creates one engine for its lifetime, binds it with
 That split is what lets coarse and fine-grained consumers coexist under one
 provider.
 
+Alternatively, pass an `engine` you created yourself with `createCmsEngine`
+instead of the options:
+
+```tsx
+<PageProvider engine={sharedEngine}>{children}</PageProvider>
+```
+
+That is how one engine serves multiple React roots, or React alongside Vue
+and Svelte islands on the same page.
+
 ## usePageContext: the coarse hook
 
 ```tsx

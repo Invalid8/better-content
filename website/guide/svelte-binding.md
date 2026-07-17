@@ -100,9 +100,41 @@ Mount the API with `createCmsHandlers` in a
 take web-standard Request/Response, which is exactly what SvelteKit
 endpoints speak.
 
+## Image editing
+
+`imageEdit` returns a readable store plus methods, with the same semantics
+as React's `EditableImage`: picking a file previews it immediately via an
+object URL and queues a pending upload that the engine flushes on save;
+external URLs are validated as http(s) and queued without a file.
+
+```svelte
+<script lang="ts">
+  import { imageEdit } from "better-content/svelte";
+  import { engine } from "$lib/cms";
+
+  export let editing: boolean;
+
+  const cover = imageEdit(engine, {
+    collection: "sections",
+    itemId: "hero",
+    fieldKey: "cover",
+  });
+</script>
+
+<figure on:click={() => editing && cover.openFilePicker()}>
+  {#if $cover.src}
+    <img src={$cover.src} alt="Cover" on:error={cover.handleError} />
+  {:else}
+    <span>no cover yet</span>
+  {/if}
+</figure>
+```
+
+Give the engine a `storage` adapter (see [Image storage](/guide/storage)),
+or file uploads have nowhere to go when the save flushes.
+
 ## What is intentionally not here
 
-Image editing and markdown editing ship as React components today; on
-Svelte, drive the engine directly (`engine.setPendingImage`, `engine`
-operations) or wrap your own action following `contentEdit` as the pattern.
-If you build one, an issue or PR is welcome.
+Markdown editing ships as a React hook today; on Svelte, drive the engine
+directly or wrap your own action following `contentEdit` as the pattern. If
+you build one, an issue or PR is welcome.
