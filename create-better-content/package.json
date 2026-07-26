@@ -1,0 +1,31 @@
+{
+  "name": "create-better-content",
+  "version": "0.1.0",
+  "description": "Scaffold a better-content app: inline editing, your own database, React, Vue, or Svelte.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "create-better-content": "index.js"
+  },
+  "files": [
+    "index.js",
+    "lib"
+  ],
+  "keywords": [
+    "better-content",
+    "cms",
+    "scaffold",
+    "create",
+    "starter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Invalid8/better-content.git",
+    "directory": "create-better-content"
+  },
+  "homepage": "https://better-content-docs.vercel.app",
+  "bugs": "https://github.com/Invalid8/better-content/issues"
+}
