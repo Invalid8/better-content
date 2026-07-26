@@ -18,10 +18,17 @@ type, save, and the write lands in your database through
 | Where content lives | Postgres (Drizzle), Firestore |
 | How writes are gated | Admin token, Firebase |
 
-Skip the prompts with flags:
+Skip the prompts with flags. Note the `--`: npm reads anything before it as
+its own flags, and `-f` is npm's `--force`.
 
 ```sh
-npm create better-content@latest my-site -f svelte -d postgres -a token
+npm create better-content@latest my-site -- -f svelte -d postgres -a token
+```
+
+`npx` passes flags straight through, so it needs no separator:
+
+```sh
+npx create-better-content my-site -f svelte -d postgres -a token
 ```
 
 `-y` accepts defaults for anything you leave out, which makes it usable in

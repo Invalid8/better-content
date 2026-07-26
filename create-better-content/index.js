@@ -75,7 +75,9 @@ ${c.bold("create-better-content")}
   Scaffold an app with inline editing wired to your own database.
 
 ${c.bold("Usage")}
-  npm create better-content@latest [directory] [options]
+  npm create better-content@latest [directory]
+  npm create better-content@latest [directory] -- [options]
+  ${c.dim("npm needs the -- separator before flags, or it reads them itself.")}
 
 ${c.bold("Options")}
   -f, --framework <${frameworks}>
@@ -84,8 +86,9 @@ ${c.bold("Options")}
   -y, --yes             skip prompts, use defaults for anything not given
   -h, --help            show this message
 
-${c.bold("Example")}
-  npm create better-content@latest my-site -f svelte -d postgres -a token
+${c.bold("Examples")}
+  npm create better-content@latest my-site -- -f svelte -d postgres -a token
+  npx create-better-content my-site -f svelte -d postgres -a token
 `);
 }
 

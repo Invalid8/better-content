@@ -16,10 +16,11 @@ npm create better-content@latest
 It asks three questions (React, Vue, or Svelte; Postgres or Firestore; admin
 token or Firebase) and writes a running app: an Astro host, your framework as
 an island, the CRUD routes, and a gate on every write. Skip the prompts with
-flags when you already know what you want:
+flags when you already know what you want. The `--` matters: npm reads
+anything before it as its own flags.
 
 ```sh
-npm create better-content@latest my-site -f svelte -d postgres -a token
+npm create better-content@latest my-site -- -f svelte -d postgres -a token
 ```
 
 The rest of this page builds the same thing by hand, which is worth reading
