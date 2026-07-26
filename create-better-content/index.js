@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import process, { stdin, stdout } from "node:process";
 import * as readline from "node:readline";
 
-import { buildFiles } from "./lib/template.js";
+import { HOSTS, buildFiles, isClientOnly } from "./lib/template.js";
 
 const useColor =
   stdout.isTTY && !process.env.NO_COLOR && process.env.TERM !== "dumb";
@@ -21,10 +21,22 @@ const c = {
 
 const QUESTIONS = [
   {
-    key: "framework",
+    key: "host",
     flag: "--framework",
     short: "-f",
-    message: "Which framework binding?",
+    message: "Which framework?",
+    options: HOSTS.map(({ meta }) => ({
+      value: meta.value,
+      label: meta.label,
+      hint: meta.hint,
+    })),
+  },
+  {
+    key: "binding",
+    flag: "--binding",
+    short: "-b",
+    message: "Which framework for the island?",
+    when: (answers) => answers.host === "astro",
     options: [
       { value: "react", label: "React", hint: "ContentEditSpan, EditableImage" },
       { value: "vue", label: "Vue", hint: "v-content-edit, useEditableImage" },
@@ -32,10 +44,30 @@ const QUESTIONS = [
     ],
   },
   {
+    key: "transport",
+    flag: "--transport",
+    short: "-t",
+    message: "Where do the writes go?",
+    when: (answers) => isClientOnly(answers.host),
+    options: [
+      {
+        value: "rest",
+        label: "An API you already run",
+        hint: "restTransport, you gate it server side",
+      },
+      {
+        value: "pglite",
+        label: "In-browser Postgres",
+        hint: "PGlite in IndexedDB, no server at all",
+      },
+    ],
+  },
+  {
     key: "database",
     flag: "--database",
     short: "-d",
     message: "Where does your content live?",
+    when: (answers) => !isClientOnly(answers.host),
     options: [
       {
         value: "postgres",
@@ -50,6 +82,7 @@ const QUESTIONS = [
     flag: "--auth",
     short: "-a",
     message: "How should writes be gated?",
+    when: (answers) => !isClientOnly(answers.host),
     options: [
       {
         value: "token",
@@ -66,9 +99,15 @@ const QUESTIONS = [
 ];
 
 function help() {
-  const frameworks = QUESTIONS[0].options.map((o) => o.value).join("|");
-  const databases = QUESTIONS[1].options.map((o) => o.value).join("|");
-  const auths = QUESTIONS[2].options.map((o) => o.value).join("|");
+  const values = (key) =>
+    QUESTIONS.find((q) => q.key === key)
+      .options.map((o) => o.value)
+      .join("|");
+  const frameworks = values("host");
+  const bindings = values("binding");
+  const transports = values("transport");
+  const databases = values("database");
+  const auths = values("auth");
   stdout.write(`
 ${c.bold("create-better-content")}
 
@@ -81,14 +120,20 @@ ${c.bold("Usage")}
 
 ${c.bold("Options")}
   -f, --framework <${frameworks}>
-  -d, --database  <${databases}>
-  -a, --auth      <${auths}>
+  -b, --binding   <${bindings}>   ${c.dim("astro only")}
+  -t, --transport <${transports}>            ${c.dim("client-only frameworks only")}
+  -d, --database  <${databases}>      ${c.dim("full-stack frameworks only")}
+  -a, --auth      <${auths}>          ${c.dim("full-stack frameworks only")}
   -y, --yes             skip prompts, use defaults for anything not given
   -h, --help            show this message
 
+${c.dim("The last three frameworks have no server, so they take a transport")}
+${c.dim("instead of a database and a gate: writes go to an API you already run,")}
+${c.dim("or to Postgres running in the browser.")}
+
 ${c.bold("Examples")}
-  npm create better-content@latest my-site -- -f svelte -d postgres -a token
-  npx create-better-content my-site -f svelte -d postgres -a token
+  npm create better-content@latest my-site -- -f next -d postgres -a token
+  npx create-better-content my-site -f react -t pglite
 `);
 }
 
@@ -221,6 +266,10 @@ async function main() {
   }
 
   for (const question of QUESTIONS) {
+    if (question.when && !question.when(answers)) {
+      delete answers[question.key];
+      continue;
+    }
     if (answers[question.key]) continue;
     answers[question.key] = interactive
       ? await select(question.message, question.options)
