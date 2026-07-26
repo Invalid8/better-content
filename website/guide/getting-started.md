@@ -4,6 +4,27 @@ better-content is an inline-edit CMS engine: your visitors (or just you, as
 the admin) edit content directly on the live page, and every field persists
 to your own database through a small adapter.
 
+## Scaffold a project
+
+The fastest path is the starter, which wires the pieces below together for
+you:
+
+```sh
+npm create better-content@latest
+```
+
+It asks three questions (React, Vue, or Svelte; Postgres or Firestore; admin
+token or Firebase) and writes a running app: an Astro host, your framework as
+an island, the CRUD routes, and a gate on every write. Skip the prompts with
+flags when you already know what you want:
+
+```sh
+npm create better-content@latest my-site -f svelte -d postgres -a token
+```
+
+The rest of this page builds the same thing by hand, which is worth reading
+once even if you scaffolded, because it is only a handful of moving parts.
+
 ## Install
 
 ```sh

@@ -43,6 +43,14 @@ React, Vue, and Svelte bindings, and one engine can serve all three at once
 
 ## Install
 
+Scaffold a working app (React, Vue, or Svelte; Postgres or Firestore):
+
+```sh
+npm create better-content@latest
+```
+
+Or add it to a project you already have:
+
 ```sh
 npm install better-content
 ```
