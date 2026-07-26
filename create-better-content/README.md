@@ -12,16 +12,40 @@ type, save, and the write lands in your database through
 
 ## What it asks
 
-| Question | Options |
-|---|---|
-| Framework binding | React, Vue, Svelte |
-| Where content lives | Postgres (Drizzle), Firestore |
-| How writes are gated | Admin token, Firebase |
+First, the framework:
 
-Skip the prompts with flags:
+| | |
+|---|---|
+| **Next.js, Nuxt, SvelteKit, Astro** | full-stack: the app serves its own CMS routes |
+| **React, Vue, Svelte** | plain Vite apps with no server of their own |
+
+The rest of the questions follow from that, because the two cases have
+genuinely different answers:
+
+| Full-stack | Client only |
+|---|---|
+| Where content lives: Postgres or Firestore | Where writes go: an API you already run, or Postgres in the browser (PGlite) |
+| How writes are gated: admin token or Firebase | nothing to ask, because a browser cannot hold credentials or gate anything |
+
+Pick Astro and it asks one more thing: which framework to use for the island
+(React, Vue, or Svelte).
+
+The client-only apps use `AnonymousEditProvider`, so visitors get a local edit
+toggle without the app pretending they are an admin. Choosing "an API you
+already run" means you gate the writes there; choosing PGlite means the whole
+database lives in the tab and there is nothing to gate.
+
+Skip the prompts with flags. Note the `--`: npm reads anything before it as
+its own flags, and `-f` is npm's `--force`.
 
 ```sh
-npm create better-content@latest my-site -f svelte -d postgres -a token
+npm create better-content@latest my-site -- -f next -d postgres -a token
+```
+
+`npx` passes flags straight through, so it needs no separator:
+
+```sh
+npx create-better-content my-site -f sveltekit -d postgres -a token
 ```
 
 `-y` accepts defaults for anything you leave out, which makes it usable in
@@ -29,27 +53,32 @@ scripts and CI.
 
 ## What it generates
 
-An [Astro](https://astro.build) app with your framework as an island. Astro
-hosts all three bindings as first-class citizens and gives the CMS routes a
-server to run on, so one template shape covers every answer instead of three
-divergent starters.
+A project that looks like what that framework's community expects, not a
+lowest-common-denominator shell. A Next.js app has `app/`, route handlers, and
+a server component; a SvelteKit app has `+page.server.ts` and `+server.ts`; a
+Nuxt app has `server/api` and Nitro handlers.
 
+What they share is the part that belongs to better-content, and it stays small
+in every one of them:
+
+| File | Job |
+|---|---|
+| `data.ts` | the only file that knows what your database is |
+| `auth.ts` | decides whether a request may write |
+| `cms.ts` | creates the engine, points it at the API routes |
+
+The CRUD surface is one factory call. In Next.js the whole route file is:
+
+```ts
+export const { GET, PUT, PATCH, DELETE } = createCmsHandlers({ data, auth });
 ```
-src/lib/data.ts      the only file that knows what your database is
-src/lib/auth.ts      decides whether a request may write
-src/lib/cms.ts       creates the engine, points it at the API routes
-src/pages/api/admin/[collection]/[id].ts   the CRUD surface, one factory call
-src/pages/index.astro                      server-loads content, hands it to the island
-src/components/Editable.{tsx,vue,svelte}   the editable UI
-```
+
+because a Next route handler is `(Request, { params })` with params as a
+promise, which is exactly what the factory returns. The other hosts need a
+couple of lines to forward the request; the CMS layer is identical.
 
 Nothing is hidden in a framework wrapper: every file is yours, and the parts
 that touch your data are three small modules you can read in a minute.
-
-The handlers speak web-standard Request/Response, so if you would rather live
-in Next.js, Nuxt, SvelteKit, or a worker, the same `createCmsHandlers` call
-moves over unchanged. The generated README covers the schema, the gate, and
-deployment.
 
 ## Requirements
 

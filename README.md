@@ -43,7 +43,8 @@ React, Vue, and Svelte bindings, and one engine can serve all three at once
 
 ## Install
 
-Scaffold a working app (React, Vue, or Svelte; Postgres or Firestore):
+Scaffold a working app (Next.js, Nuxt, SvelteKit, or Astro; Postgres or
+Firestore):
 
 ```sh
 npm create better-content@latest
