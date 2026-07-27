@@ -6,11 +6,15 @@ import type {
 } from "better-content/core";
 import { createAdminGate, UnauthorizedError } from "./createAdminGate";
 
+export type ErrorReporter = (error: unknown) => void;
+
 export interface CmsHandlersDeps {
   data: DataAdapter;
   auth: AuthAdapter;
   storage?: ServerStorageAdapter;
   authorize?: AuthorizeFn;
+  /** Reports server-side failures; defaults to `console.error`. */
+  onError?: ErrorReporter;
 }
 
 type RouteContext = {
@@ -42,7 +46,11 @@ async function readObjectBody(req: Request): Promise<Record<string, unknown>> {
   return body as Record<string, unknown>;
 }
 
-function errorResponse(error: unknown): Response {
+const defaultOnError: ErrorReporter = (error) => {
+  console.error("[better-content]", error);
+};
+
+function errorResponse(error: unknown, onError: ErrorReporter): Response {
   if (error instanceof UnauthorizedError) {
     if (error.status === 401) {
       return json({ error: error.message, logout: true }, 401);
@@ -52,8 +60,10 @@ function errorResponse(error: unknown): Response {
   if (error instanceof BadRequestError) {
     return json({ error: error.message }, 400);
   }
-  const message = error instanceof Error ? error.message : "Request failed";
-  return json({ error: message }, 500);
+
+  // Adapter errors can carry query text and values, so they stay server-side.
+  onError(error);
+  return json({ error: "Request failed" }, 500);
 }
 
 export function createCmsHandlers(deps: CmsHandlersDeps): {
@@ -63,7 +73,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
   DELETE: RouteHandler;
   sign: SignHandler;
 } {
-  const { data, auth, storage, authorize } = deps;
+  const { data, auth, storage, authorize, onError = defaultOnError } = deps;
   const requireAdmin = createAdminGate(auth, authorize);
 
   const GET: RouteHandler = async (req, ctx) => {
@@ -74,7 +84,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
       if (!doc) return json({ error: "Document not found" }, 404);
       return json(doc);
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, onError);
     }
   };
 
@@ -86,7 +96,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
       await data.update(collection, id, body);
       return json({ ok: true });
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, onError);
     }
   };
 
@@ -98,7 +108,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
       await data.upsert(collection, id, body);
       return json({ ok: true });
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, onError);
     }
   };
 
@@ -109,7 +119,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
       await data.delete(collection, id);
       return json({ ok: true });
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, onError);
     }
   };
 
@@ -122,7 +132,7 @@ export function createCmsHandlers(deps: CmsHandlersDeps): {
       const result = await storage.sign(req);
       return json(result);
     } catch (error) {
-      return errorResponse(error);
+      return errorResponse(error, onError);
     }
   };
 
