@@ -140,6 +140,7 @@ ${c.bold("Usage")}
 ${c.bold("Options")}
   -f, --framework <${frameworks}>
   -b, --binding   <${bindings}>   ${c.dim("astro only")}
+  -w, --tailwind  <yes|no>                 ${c.dim("frameworks with their own CLI")}
   -t, --transport <${transports}>            ${c.dim("client-only frameworks only")}
   -d, --database  <${databases}>      ${c.dim("full-stack frameworks only")}
   -a, --auth      <${auths}>          ${c.dim("full-stack frameworks only")}
