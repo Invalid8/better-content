@@ -5,7 +5,15 @@ import { dirname, join, resolve } from "node:path";
 import process, { stdin, stdout } from "node:process";
 import * as readline from "node:readline";
 
-import { HOSTS, buildFiles, isClientOnly } from "./lib/template.js";
+import { mergeDependencies, appendFile } from "./lib/run.js";
+import { styleKit } from "./lib/shared.js";
+import {
+  HOSTS,
+  buildFiles,
+  hostFor,
+  isClientOnly,
+  supportsTailwind,
+} from "./lib/template.js";
 
 const useColor =
   stdout.isTTY && !process.env.NO_COLOR && process.env.TERM !== "dumb";
@@ -41,6 +49,17 @@ const QUESTIONS = [
       { value: "react", label: "React", hint: "ContentEditSpan, EditableImage" },
       { value: "vue", label: "Vue", hint: "v-content-edit, useEditableImage" },
       { value: "svelte", label: "Svelte", hint: "use:contentEdit, imageEdit" },
+    ],
+  },
+  {
+    key: "tailwind",
+    flag: "--tailwind",
+    short: "-w",
+    message: "Add Tailwind CSS?",
+    when: (answers) => supportsTailwind(answers.host),
+    options: [
+      { value: "yes", label: "Yes", hint: "shadcn/ui works on top of it" },
+      { value: "no", label: "No", hint: "a small stylesheet instead" },
     ],
   },
   {
@@ -283,24 +302,48 @@ async function main() {
     );
   }
 
+  answers.tailwind = answers.tailwind === "yes";
   const name = directory.split("/").filter(Boolean).pop() ?? "my-content-site";
-  const files = buildFiles({ ...answers, name });
+  const settings = { ...answers, name };
+  const host = hostFor(answers.host);
 
+  // Where a framework ships its own scaffolder, we run that and add our layer
+  // on top, so you get whatever options it offers rather than my copy of them.
+  if (host.scaffold) {
+    stdout.write(`${c.dim(`Running the ${host.meta.label} scaffolder…`)}\n\n`);
+    await host.scaffold(directory, settings);
+    stdout.write("\n");
+  }
+
+  const files = buildFiles(settings);
   for (const [path, contents] of Object.entries(files)) {
     const full = join(target, path);
     await mkdir(dirname(full), { recursive: true });
     await writeFile(full, contents, "utf8");
   }
 
-  const count = Object.keys(files).length;
+  if (host.scaffold) {
+    await mergeDependencies(target, host.dependencies(settings));
+    if (host.globalCss) {
+      await appendFile(target, host.globalCss, styleKit(settings.tailwind).css);
+    }
+  }
+
   stdout.write(
-    `\n${c.green("Done.")} ${count} files in ${c.bold(directory)}\n\n`,
+    `\n${c.green("Done.")} better-content added to ${c.bold(directory)}\n\n`,
   );
   stdout.write(`${c.bold("Next")}\n`);
   stdout.write(`  cd ${directory}\n`);
   stdout.write(`  npm install\n`);
-  stdout.write(`  cp .env.example .env    ${c.dim("# then fill it in")}\n`);
+  if (files[".env.example"]) {
+    stdout.write(`  cp .env.example .env    ${c.dim("# then fill it in")}\n`);
+  }
   stdout.write(`  npm run dev\n\n`);
+  if (settings.tailwind) {
+    stdout.write(
+      `${c.dim("Tailwind is set up, so `npx shadcn@latest init` works from here.")}\n`,
+    );
+  }
   stdout.write(
     `${c.dim("The generated README covers the schema, the gate, and how to deploy.")}\n\n`,
   );
