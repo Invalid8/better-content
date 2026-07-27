@@ -2,7 +2,7 @@
 // here reads config from process.env, which every one of the four hosts
 // supports, so these files never need a host-specific variant.
 
-export const BETTER_CONTENT = "^0.3.0";
+export const BETTER_CONTENT = "^0.3.1";
 
 export const sorted = (object) =>
   Object.fromEntries(Object.entries(object).sort(([a], [b]) => (a < b ? -1 : 1)));

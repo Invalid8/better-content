@@ -20,6 +20,7 @@ interface CmsHandlersDeps {
   auth: AuthAdapter;
   storage?: ServerStorageAdapter;   // enables the sign handler
   authorize?: AuthorizeFn;          // default: identity.isAdmin === true
+  onError?: (error: unknown) => void;  // default: console.error
 }
 
 type RouteHandler = (
@@ -39,8 +40,14 @@ Route semantics at `{base}/{collection}/{id}`:
 | sign | `storage.sign` | signer payload | 404 without storage |
 
 Every handler runs the admin gate first: **401** `{ error, logout: true }`
-for unverified requests, **403** for verified non-admins. Adapter errors
-become **500** with the error message. Bodies must be JSON objects.
+for unverified requests, **403** for verified non-admins. Bodies must be JSON
+objects.
+
+Anything else (adapter, storage, or driver failures) is passed to `onError`
+and answered with a generic **500** `{ error: "Request failed" }`. The
+underlying message never reaches the client, because adapter errors routinely
+contain query text and parameter values. Pass your own `onError` to route
+these to a real logger.
 
 ## createAdminGate
 

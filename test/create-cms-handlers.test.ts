@@ -114,13 +114,37 @@ describe("createCmsHandlers", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 500 with the message when the adapter fails", async () => {
+  it("returns a generic 500 without leaking the adapter error", async () => {
     const data = fakeData();
-    data.upsert.mockRejectedValueOnce(new Error("db down"));
-    const { PUT } = createCmsHandlers({ data, auth: adminAuth });
+    const onError = vi.fn();
+    data.upsert.mockRejectedValueOnce(
+      new Error('insert into "users" ... params: secret@example.com'),
+    );
+    const { PUT } = createCmsHandlers({ data, auth: adminAuth, onError });
     const res = await PUT(jsonRequest("PUT", { title: "x" }), ctx());
+
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ error: "db down" });
+    const body = await res.text();
+    expect(body).toBe(JSON.stringify({ error: "Request failed" }));
+    expect(body).not.toContain("secret@example.com");
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError.mock.calls[0]![0]).toBeInstanceOf(Error);
+  });
+
+  it("does not report client mistakes to onError", async () => {
+    const onError = vi.fn();
+    const { PUT } = createCmsHandlers({
+      data: fakeData(),
+      auth: adminAuth,
+      onError,
+    });
+
+    const bad = new Request("http://test/api/sections/hero", {
+      method: "PUT",
+      body: "not json",
+    });
+    expect((await PUT(bad, ctx())).status).toBe(400);
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it("sign returns 404 without a storage adapter", async () => {
