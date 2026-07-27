@@ -448,3 +448,112 @@ export const SVELTEKIT_ENV = {
   importLine: 'import { env } from "$env/dynamic/private";',
   read: (name) => `env.${name}`,
 };
+
+// Our injected UI has to look at home in whichever project their scaffolder
+// produced, so it either uses Tailwind utilities or a small stylesheet we
+// append. One class map covers every framework.
+export function styleKit(tailwind) {
+  if (tailwind) {
+    return {
+      classes: {
+        main: "mx-auto max-w-2xl px-6 py-16",
+        page: "",
+        h1: "text-4xl font-semibold tracking-tight",
+        p: "mt-4 text-neutral-600 dark:text-neutral-400",
+        bar: "mt-10 flex gap-2 border-t border-neutral-200 pt-5 dark:border-neutral-800",
+        button:
+          "rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:border-neutral-500 disabled:opacity-45 dark:border-neutral-700",
+        note: "mt-6 text-sm text-neutral-500",
+        input:
+          "w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700",
+        error: "mt-2 text-sm text-red-600",
+        link: "mt-8 inline-block text-sm text-neutral-500 hover:underline",
+      },
+      css: CMS_HOOKS_CSS,
+    };
+  }
+
+  return {
+    classes: {
+      main: "",
+      page: "page",
+      h1: "",
+      p: "",
+      bar: "bar",
+      button: "",
+      note: "note",
+      input: "",
+      error: "error",
+      link: "admin-link",
+    },
+    css: `${PLAIN_CSS}\n${CMS_HOOKS_CSS}`,
+  };
+}
+
+const CMS_HOOKS_CSS = `/* Styling hooks the editing primitives set on whatever element you bind. */
+[data-cms-editing] {
+  border-radius: 3px;
+  outline: 1px dashed currentColor;
+  outline-offset: 3px;
+  opacity: 0.95;
+  cursor: text;
+}
+
+[data-cms-focused] {
+  outline-style: solid;
+  outline-width: 2px;
+  opacity: 1;
+}`;
+
+const PLAIN_CSS = `main {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  font: 16px/1.6 ui-sans-serif, system-ui, sans-serif;
+}
+
+.page h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.1;
+  margin: 0 0 1rem;
+}
+
+.page p {
+  opacity: 0.75;
+  margin: 0 0 2rem;
+}
+
+.bar {
+  display: flex;
+  gap: 0.6rem;
+  border-top: 1px solid currentColor;
+  padding-top: 1.25rem;
+}
+
+.bar button {
+  font: inherit;
+  padding: 0.45rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.bar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.note {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 1.5rem;
+}
+
+.admin-link {
+  display: inline-block;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}`;

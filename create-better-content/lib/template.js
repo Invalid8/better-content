@@ -23,3 +23,8 @@ export function buildFiles(answers) {
   if (!host) throw new Error(`Unknown host: ${answers.host}`);
   return host.files(answers);
 }
+
+export const hostFor = (value) => byValue.get(value);
+
+export const supportsTailwind = (value) =>
+  byValue.get(value)?.meta.tailwind === true;
