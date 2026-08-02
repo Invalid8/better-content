@@ -37,6 +37,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   const initialItems = await fetchItemMap("/api/content");
   ```
 
+- `better-content/react` re-exports the `Notifier` and `PendingImage` types.
+  Both are React-facing in practice (`notify` is a `PageProvider` prop,
+  `pendingImages` is on the context), so configuring one provider no longer
+  means importing from two entry points.
+
+### Docs
+
+- The auth and storage pages now say plainly that Firebase and Cloudinary are
+  the only providers shipping today, that more are coming gradually, and how
+  to write an `AuthAdapter` or `ClientStorageAdapter` yourself in the
+  meantime. Both seams are one method.
+
 ## [0.3.1] - 2026-07-27
 
 ### Fixed

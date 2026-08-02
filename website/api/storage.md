@@ -1,5 +1,26 @@
 # Storage
 
+Cloudinary is the only provider that ships today. More are being added
+gradually.
+
+As with auth, the seam is small. A client storage adapter is one method, and
+`EditableImage` never learns where the bytes went:
+
+```ts
+import type { ClientStorageAdapter } from "better-content/core";
+
+export const storage: ClientStorageAdapter = {
+  async upload(file) {
+    // sign on your server, post the file, return the public URL
+    return { url: await putSomewhere(file) };
+  },
+};
+```
+
+S3, R2, UploadThing, or your own endpoint all fit that shape. Keep the
+credentials on the server and hand the browser a short-lived signature, which
+is what the Cloudinary adapter below does.
+
 ## better-content/storage/cloudinary (client)
 
 ```ts

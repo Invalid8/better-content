@@ -1,5 +1,29 @@
 # Auth
 
+Firebase is the only provider that ships today. More are being added
+gradually.
+
+That is not a limit on what you can use. Auth reaches the library through one
+small interface, [`AuthAdapter`](/api/core#seam-interfaces), and
+`createCmsHandlers` only ever calls `verifyRequest`:
+
+```ts
+import type { AuthAdapter } from "better-content/core";
+
+export const auth: AuthAdapter = {
+  async verifyRequest(req) {
+    // however you decide: a signed cookie, a session lookup, an OIDC token
+    return isAdmin(req) ? { isAdmin: true } : null;
+  },
+};
+```
+
+Return `null` for "not an admin" and the gate answers 401 `{ logout: true }`.
+Anything you can check inside a `Request` on your server can back it, so
+NextAuth, Auth.js, Clerk, Lucia, or a plain admin token are all a handful of
+lines. The token gate that `create-better-content` generates is exactly this,
+and worth reading as a template.
+
 ## better-content/auth/firebase (server)
 
 ```ts
