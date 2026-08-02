@@ -7,10 +7,23 @@ export const BETTER_CONTENT = "^0.3.1";
 export const sorted = (object) =>
   Object.fromEntries(Object.entries(object).sort(([a], [b]) => (a < b ? -1 : 1)));
 
-export function databaseDeps(database) {
-  return database === "postgres"
-    ? { deps: { "drizzle-orm": "^0.45.0", pg: "^8.22.0" }, devDeps: { "@types/pg": "^8.11.10" } }
-    : { deps: { "firebase-admin": "^14.1.0" }, devDeps: {} };
+const FIREBASE_ADMIN = "^14.1.0";
+
+// The database and the gate are chosen independently, and firebase-admin backs
+// both the Firestore adapter and the Firebase gate. Postgres + Firebase is a
+// real combination, so this has to key off both answers, not just the database.
+export function serverDeps({ database, auth }) {
+  const { deps, devDeps } =
+    database === "postgres"
+      ? {
+          deps: { "drizzle-orm": "^0.45.0", pg: "^8.22.0" },
+          devDeps: { "@types/pg": "^8.11.10" },
+        }
+      : { deps: { "firebase-admin": FIREBASE_ADMIN }, devDeps: {} };
+
+  if (auth === "firebase") deps["firebase-admin"] = FIREBASE_ADMIN;
+
+  return { deps, devDeps };
 }
 
 // Hosts differ in where server env vars come from: Next and Nuxt populate

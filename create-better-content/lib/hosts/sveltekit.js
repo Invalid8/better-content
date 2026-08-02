@@ -2,13 +2,13 @@ import {
   BETTER_CONTENT,
   SVELTEKIT_ENV,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
   gitignore,
   readme,
   schemaModule,
   schemaSql,
+  serverDeps,
   sorted,
   styles,
 } from "../shared.js";
@@ -48,9 +48,9 @@ export function files(answers) {
     typescript: "^5.9.3",
     vite: "^8.1.5",
   };
-  const db = databaseDeps(database);
-  Object.assign(deps, db.deps);
-  Object.assign(devDeps, db.devDeps);
+  const server = serverDeps(answers);
+  Object.assign(deps, server.deps);
+  Object.assign(devDeps, server.devDeps);
 
   const out = {
     "package.json": `${JSON.stringify(

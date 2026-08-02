@@ -1,13 +1,13 @@
 import {
   BETTER_CONTENT,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
   gitignore,
   readme,
   schemaModule,
   schemaSql,
+  serverDeps,
   sorted,
   styles,
 } from "../shared.js";
@@ -238,9 +238,9 @@ export function files(answers) {
     ...bind.deps,
   };
   const devDeps = { typescript: "^5.9.3", ...bind.devDeps };
-  const db = databaseDeps(database);
-  Object.assign(deps, db.deps);
-  Object.assign(devDeps, db.devDeps);
+  const server = serverDeps(answers);
+  Object.assign(deps, server.deps);
+  Object.assign(devDeps, server.devDeps);
 
   const out = {
     "package.json": `${JSON.stringify(
