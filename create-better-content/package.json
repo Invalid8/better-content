@@ -1,6 +1,6 @@
 {
   "name": "create-better-content",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scaffold a better-content app: inline editing, your own database, React, Vue, or Svelte.",
   "license": "MIT",
   "type": "module",
@@ -9,6 +9,9 @@
   },
   "bin": {
     "create-better-content": "index.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
   },
   "files": [
     "index.js",

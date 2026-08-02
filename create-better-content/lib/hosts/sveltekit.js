@@ -2,23 +2,58 @@ import {
   BETTER_CONTENT,
   SVELTEKIT_ENV,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
-  gitignore,
   readme,
   schemaModule,
   schemaSql,
-  sorted,
-  styles,
+  serverDeps,
+  styleKit,
+  stylesheet,
 } from "../shared.js";
+import { npx } from "../run.js";
 
 export const meta = {
   value: "sveltekit",
   label: "SvelteKit",
   hint: "Svelte 5, runes",
   binding: "svelte",
+  tailwind: true,
 };
+
+// The add-ons carry their own options, and every one of them has to be given
+// explicitly: `--add tailwindcss` on its own still stops to ask which plugins
+// you want, even with no TTY, which hangs the scaffold.
+export function scaffold(directory, { tailwind }) {
+  const args = [
+    "sv@latest",
+    "create",
+    directory,
+    "--template",
+    "minimal",
+    "--types",
+    "ts",
+    "--no-install",
+    "--no-dir-check",
+    "--no-download-check",
+    "--add",
+    "sveltekit-adapter=adapter:node",
+  ];
+
+  if (tailwind) args.push("--add", "tailwindcss=plugins:none");
+
+  return npx(args);
+}
+
+export function dependencies(answers) {
+  const server = serverDeps(answers);
+  return {
+    deps: { "better-content": BETTER_CONTENT, ...server.deps },
+    devDeps: server.devDeps,
+    // sv leaves the built server to `node build`; nothing in its scripts runs it.
+    scripts: { start: "node build" },
+  };
+}
 
 const layout = {
   dataPath: "src/lib/data.ts",
@@ -35,80 +70,15 @@ childless: the action owns their text. \`imageEdit\` comes from the same import
 for image fields. The load function stays on the server, so the database never
 reaches the browser bundle.`;
 
-export function files(answers) {
-  const { database, auth, name } = answers;
+const attr = (name, value) => (value ? ` ${name}="${value}"` : "");
+const line = (indent, name, value) =>
+  value ? `\n${" ".repeat(indent)}${name}="${value}"` : "";
 
-  const deps = { "better-content": BETTER_CONTENT };
-  const devDeps = {
-    "@sveltejs/adapter-node": "^5.5.7",
-    "@sveltejs/kit": "^2.70.1",
-    "@sveltejs/vite-plugin-svelte": "^7.2.0",
-    svelte: "^5.56.5",
-    "svelte-check": "^4.4.1",
-    typescript: "^5.9.3",
-    vite: "^8.1.5",
-  };
-  const db = databaseDeps(database);
-  Object.assign(deps, db.deps);
-  Object.assign(devDeps, db.devDeps);
+export function files(answers) {
+  const { database, auth, name, tailwind } = answers;
+  const { classes } = styleKit(tailwind);
 
   const out = {
-    "package.json": `${JSON.stringify(
-      {
-        name,
-        private: true,
-        type: "module",
-        scripts: {
-          dev: "vite dev",
-          build: "vite build",
-          preview: "vite preview",
-          start: "node build",
-          check: "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        },
-        dependencies: sorted(deps),
-        devDependencies: sorted(devDeps),
-      },
-      null,
-      2,
-    )}\n`,
-
-    "svelte.config.js": `import adapter from "@sveltejs/adapter-node";
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-
-export default {
-  preprocess: vitePreprocess(),
-  kit: { adapter: adapter() },
-};
-`,
-
-    "vite.config.ts": `import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [sveltekit()],
-});
-`,
-
-    "tsconfig.json": `${JSON.stringify(
-      {
-        extends: "./.svelte-kit/tsconfig.json",
-        compilerOptions: {
-          allowJs: true,
-          checkJs: true,
-          esModuleInterop: true,
-          forceConsistentCasingInFileNames: true,
-          resolveJsonModule: true,
-          skipLibCheck: true,
-          sourceMap: true,
-          strict: true,
-          moduleResolution: "bundler",
-        },
-      },
-      null,
-      2,
-    )}\n`,
-
-    ".gitignore": gitignore([".svelte-kit/", "build/"]),
     ".env.example": `${envExample(answers)}
 # adapter-node checks the request origin before accepting a form POST. Without
 # this, the /admin sign in returns 403 in production.
@@ -121,6 +91,7 @@ ORIGIN=http://localhost:3000
       name,
       layout,
       deploy: `\`\`\`sh
+npm run build
 ORIGIN=https://your-domain.example npm start
 \`\`\`
 
@@ -128,25 +99,27 @@ Set \`ORIGIN\` to the URL the app is served from. \`adapter-node\` compares
 it against the origin of incoming form posts, and rejects them with a 403 when
 it cannot tell, which would break the sign in page.
 
-Swap \`@sveltejs/adapter-node\` in \`svelte.config.js\` for
-\`adapter-vercel\`, \`adapter-netlify\`, or \`adapter-cloudflare\` to deploy
-with a platform adapter instead; those set the origin for you.`,
+The adapter is configured in \`vite.config.ts\`, where \`sv\` put it. Swap
+\`@sveltejs/adapter-node\` for \`adapter-vercel\`, \`adapter-netlify\`, or
+\`adapter-cloudflare\` to deploy with a platform adapter instead; those set the
+origin for you.`,
     }),
 
-    "src/app.html": `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    %sveltekit.head%
-  </head>
-  <body data-sveltekit-preload-data="hover">
-    <div style="display: contents">%sveltekit.body%</div>
-  </body>
-</html>
-`,
+    "src/routes/layout.css": stylesheet(tailwind),
 
-    "src/app.css": styles(),
+    // Same shape sv writes, kept so the stylesheet import is there whether or
+    // not the Tailwind add-on ran.
+    "src/routes/+layout.svelte": `<script lang="ts">
+  import "./layout.css";
+  import favicon from "$lib/assets/favicon.svg";
+
+  let { children } = $props();
+</script>
+
+<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+
+{@render children()}
+`,
 
     "src/lib/data.ts": dataModule(answers, SVELTEKIT_ENV),
     "src/lib/auth.ts": authModule(answers, SVELTEKIT_ENV),
@@ -165,15 +138,6 @@ export function createEngine(initialItems: ItemMap): CmsEngine {
     initialItems,
   });
 }
-`,
-
-    "src/routes/+layout.svelte": `<script lang="ts">
-  import "../app.css";
-
-  let { children } = $props();
-</script>
-
-{@render children()}
 `,
 
     "src/routes/+page.server.ts": `import { loadItemMap } from "better-content/server";
@@ -207,14 +171,20 @@ export const load: PageServerLoad = async () => ({
 
   let { data }: { data: PageData } = $props();
 
+  // The server load runs once per navigation and the engine owns the snapshot
+  // from there on.
+  // svelte-ignore state_referenced_locally
   const engine = createEngine(data.initialItems);
   const snapshot = engineStore(engine);
   let editing = $state(false);
 </script>
 
-<main>
-  <article class="page">
-    <h1
+<!-- contentEdit renders the field value into these elements, so they are
+     intentionally empty here: the action owns their text. -->
+<main${attr("class", classes.main)}>
+  <article${attr("class", classes.page)}>
+    <!-- svelte-ignore a11y_missing_content -->
+    <h1${line(6, "class", classes.h1)}
       use:contentEdit={{
         engine,
         collection: "sections",
@@ -223,7 +193,8 @@ export const load: PageServerLoad = async () => ({
         editing,
       }}
     ></h1>
-    <p
+    <!-- svelte-ignore a11y_missing_content -->
+    <p${line(6, "class", classes.p)}
       use:contentEdit={{
         engine,
         collection: "sections",
@@ -233,11 +204,14 @@ export const load: PageServerLoad = async () => ({
       }}
     ></p>
 
-    <div class="bar">
-      <button aria-pressed={editing} onclick={() => (editing = !editing)}>
+    <div${attr("class", classes.bar)}>
+      <button${line(8, "class", classes.button)}
+        aria-pressed={editing}
+        onclick={() => (editing = !editing)}
+      >
         {editing ? "Done" : "Edit"}
       </button>
-      <button
+      <button${line(8, "class", classes.button)}
         disabled={!$snapshot.hasUnsavedChanges || $snapshot.saving}
         onclick={() => engine.saveAll()}
       >
@@ -245,7 +219,7 @@ export const load: PageServerLoad = async () => ({
       </button>
     </div>
   </article>
-${auth === "token" ? `  <a class="admin-link" href="/admin">admin sign in</a>\n` : ""}</main>
+${auth === "token" ? `  <a${attr("class", classes.link)} href="/admin">admin sign in</a>\n` : ""}</main>
 `,
 
     "src/routes/api/admin/[collection]/[id]/+server.ts": `import { createCmsHandlers } from "better-content/server";
@@ -311,25 +285,25 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
   const failed = $derived(page.url.searchParams.has("error"));
 </script>
 
-<main>
-  <form class="page" method="POST" action="/api/login">
-    <h1>Admin sign in</h1>
-    <p>
+<main${attr("class", classes.main)}>
+  <form${attr("class", classes.page)} method="POST" action="/api/login">
+    <h1${attr("class", classes.h1)}>Admin sign in</h1>
+    <p${attr("class", classes.p)}>
       Enter the value of <code>ADMIN_TOKEN</code> to enable saving. Without it
       you can still toggle edit mode and type, but writes are rejected.
     </p>
     {#if failed}
-      <p class="error">That token did not match.</p>
+      <p${attr("class", classes.error)}>That token did not match.</p>
     {/if}
-    <input
+    <input${line(6, "class", classes.input)}
       type="password"
       name="token"
       placeholder="admin token"
       autocomplete="current-password"
       required
     />
-    <div class="bar">
-      <button type="submit">Sign in</button>
+    <div${attr("class", classes.bar)}>
+      <button${attr("class", classes.button)} type="submit">Sign in</button>
     </div>
   </form>
 </main>

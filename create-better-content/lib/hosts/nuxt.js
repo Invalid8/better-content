@@ -1,23 +1,69 @@
 import {
   BETTER_CONTENT,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
-  gitignore,
   readme,
   schemaModule,
   schemaSql,
-  sorted,
-  styles,
+  serverDeps,
+  styleKit,
+  stylesheet,
 } from "../shared.js";
+import { editConfig, npx } from "../run.js";
 
 export const meta = {
   value: "nuxt",
   label: "Nuxt",
   hint: "Vue 3, Nitro server",
   binding: "vue",
+  tailwind: true,
 };
+
+// nuxi refuses to pick a template for you without a TTY, so name it. The rest
+// of the flags keep the install and the git repo out of our way.
+export async function scaffold(directory, { tailwind }) {
+  await npx([
+    "nuxi@latest",
+    "init",
+    directory,
+    "--template",
+    "minimal",
+    "--no-install",
+    "--no-gitInit",
+    "--packageManager",
+    "npm",
+  ]);
+
+  // Nuxt has no first-party Tailwind 4 command: the module on nuxi is still
+  // the v3 one. Tailwind's own Nuxt guide is this Vite plugin plus the
+  // @import, which the stylesheet we write already carries.
+  const options = `  css: ["~/assets/css/main.css"],
+  nitro: {
+    // Database drivers stay external so Nitro does not try to bundle their
+    // native bits into the server output.
+    externals: { external: ["pg", "firebase-admin"] },
+  },${tailwind ? "\n  vite: { plugins: [tailwindcss()] }," : ""}`;
+
+  await editConfig(directory, "nuxt.config.ts", {
+    factory: "defineNuxtConfig",
+    imports: tailwind ? ["import tailwindcss from '@tailwindcss/vite'"] : [],
+    options,
+  });
+}
+
+export function dependencies({ tailwind, ...answers }) {
+  const server = serverDeps(answers);
+  return {
+    deps: { "better-content": BETTER_CONTENT, ...server.deps },
+    devDeps: {
+      ...server.devDeps,
+      ...(tailwind
+        ? { tailwindcss: "^4.3.3", "@tailwindcss/vite": "^4.3.3" }
+        : {}),
+    },
+  };
+}
 
 const layout = {
   dataPath: "server/lib/data.ts",
@@ -37,53 +83,15 @@ Nuxt renders pages on both server and client, so the initial content comes
 from \`server/api/content.get.ts\` rather than being read inline. That keeps
 the database driver in the Nitro bundle and out of the browser.`;
 
-export function files(answers) {
-  const { database, auth, name } = answers;
+const attr = (name, value) => (value ? ` ${name}="${value}"` : "");
+const line = (indent, name, value) =>
+  value ? `\n${" ".repeat(indent)}${name}="${value}"` : "";
 
-  const deps = {
-    "better-content": BETTER_CONTENT,
-    nuxt: "^4.5.0",
-    vue: "^3.5.39",
-    "vue-router": "^4.5.0",
-  };
-  const devDeps = { typescript: "^5.9.3" };
-  const db = databaseDeps(database);
-  Object.assign(deps, db.deps);
-  Object.assign(devDeps, db.devDeps);
+export function files(answers) {
+  const { database, auth, name, tailwind } = answers;
+  const { classes } = styleKit(tailwind);
 
   const out = {
-    "package.json": `${JSON.stringify(
-      {
-        name,
-        private: true,
-        type: "module",
-        scripts: {
-          dev: "nuxt dev",
-          build: "nuxt build",
-          preview: "nuxt preview",
-          postinstall: "nuxt prepare",
-        },
-        dependencies: sorted(deps),
-        devDependencies: sorted(devDeps),
-      },
-      null,
-      2,
-    )}\n`,
-
-    "nuxt.config.ts": `export default defineNuxtConfig({
-  compatibilityDate: "2025-07-01",
-  css: ["~/assets/css/main.css"],
-  nitro: {
-    // Database drivers stay external so Nitro does not try to bundle their
-    // native bits into the server output.
-    externals: { external: ["pg", "firebase-admin"] },
-  },
-});
-`,
-
-    "tsconfig.json": `${JSON.stringify({ extends: "./.nuxt/tsconfig.json" }, null, 2)}\n`,
-
-    ".gitignore": gitignore([".nuxt/", ".output/", ".data/"]),
     ".env.example": envExample(answers),
     "README.md": readme({
       host: { label: "Nuxt", bindingNote },
@@ -105,7 +113,7 @@ Vercel, Netlify, or Cloudflare usually needs no configuration change.`,
 </template>
 `,
 
-    "app/assets/css/main.css": styles(),
+    "app/assets/css/main.css": stylesheet(tailwind),
 
     "app/utils/cms.ts": `import {
   createCmsEngine,
@@ -137,9 +145,11 @@ const editing = ref(false);
 </script>
 
 <template>
-  <main>
-    <article class="page">
-      <h1
+  <!-- v-content-edit renders the field value into these elements, so they are
+       intentionally empty here: the directive owns their text. -->
+  <main${attr("class", classes.main)}>
+    <article${attr("class", classes.page)}>
+      <h1${line(8, "class", classes.h1)}
         v-content-edit="{
           engine,
           collection: 'sections',
@@ -148,7 +158,7 @@ const editing = ref(false);
           editing,
         }"
       ></h1>
-      <p
+      <p${line(8, "class", classes.p)}
         v-content-edit="{
           engine,
           collection: 'sections',
@@ -158,11 +168,14 @@ const editing = ref(false);
         }"
       ></p>
 
-      <div class="bar">
-        <button :aria-pressed="editing" @click="editing = !editing">
+      <div${attr("class", classes.bar)}>
+        <button${line(10, "class", classes.button)}
+          :aria-pressed="editing"
+          @click="editing = !editing"
+        >
           {{ editing ? "Done" : "Edit" }}
         </button>
-        <button
+        <button${line(10, "class", classes.button)}
           :disabled="!snapshot.hasUnsavedChanges || snapshot.saving"
           @click="engine.saveAll()"
         >
@@ -170,7 +183,7 @@ const editing = ref(false);
         </button>
       </div>
     </article>
-${auth === "token" ? `    <a class="admin-link" href="/admin">admin sign in</a>\n` : ""}  </main>
+${auth === "token" ? `    <a${attr("class", classes.link)} href="/admin">admin sign in</a>\n` : ""}  </main>
 </template>
 `,
 
@@ -260,23 +273,23 @@ const failed = computed(() => "error" in route.query);
 </script>
 
 <template>
-  <main>
-    <form class="page" method="POST" action="/api/login">
-      <h1>Admin sign in</h1>
-      <p>
+  <main${attr("class", classes.main)}>
+    <form${attr("class", classes.page)} method="POST" action="/api/login">
+      <h1${attr("class", classes.h1)}>Admin sign in</h1>
+      <p${attr("class", classes.p)}>
         Enter the value of <code>ADMIN_TOKEN</code> to enable saving. Without it
         you can still toggle edit mode and type, but writes are rejected.
       </p>
-      <p v-if="failed" class="error">That token did not match.</p>
-      <input
+      <p v-if="failed"${attr("class", classes.error)}>That token did not match.</p>
+      <input${line(8, "class", classes.input)}
         type="password"
         name="token"
         placeholder="admin token"
         autocomplete="current-password"
         required
       />
-      <div class="bar">
-        <button type="submit">Sign in</button>
+      <div${attr("class", classes.bar)}>
+        <button${attr("class", classes.button)} type="submit">Sign in</button>
       </div>
     </form>
   </main>

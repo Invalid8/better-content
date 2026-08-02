@@ -1,50 +1,66 @@
 import {
   BETTER_CONTENT,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
-  gitignore,
   readme,
   schemaModule,
   schemaSql,
-  sorted,
-  styles,
+  serverDeps,
+  styleKit,
+  stylesheet,
 } from "../shared.js";
+import { npx } from "../run.js";
 
 export const meta = {
   value: "astro",
   label: "Astro",
   hint: "islands, pick your framework",
-  needsBinding: true,
+  tailwind: true,
 };
 
 const BINDINGS = {
-  react: {
-    integration: "@astrojs/react",
-    integrationVersion: "^6.0.1",
-    component: "Editable.tsx",
-    importPath: "../components/Editable",
-    deps: { react: "^19.2.7", "react-dom": "^19.2.7" },
-    devDeps: { "@types/react": "^19.2.17", "@types/react-dom": "^19.2.3" },
-  },
-  vue: {
-    integration: "@astrojs/vue",
-    integrationVersion: "^7.0.1",
-    component: "Editable.vue",
-    importPath: "../components/Editable.vue",
-    deps: { vue: "^3.5.39" },
-    devDeps: {},
-  },
+  react: { integration: "react", component: "Editable.tsx", importPath: "../components/Editable" },
+  vue: { integration: "vue", component: "Editable.vue", importPath: "../components/Editable.vue" },
   svelte: {
-    integration: "@astrojs/svelte",
-    integrationVersion: "^9.0.1",
+    integration: "svelte",
     component: "Editable.svelte",
     importPath: "../components/Editable.svelte",
-    deps: { svelte: "^5.56.5" },
-    devDeps: {},
   },
 };
+
+// One call covers the island integration, the adapter and Tailwind, each at
+// whatever version is current, and leaves astro.config.mjs and tsconfig.json
+// correctly wired. Nothing here needs editing afterwards.
+//
+// Unlike the other hosts this one installs while it runs, because `astro add`
+// refuses to work without dependencies present. Hardcoding the integration
+// versions to avoid that would reintroduce exactly the drift being removed.
+export function scaffold(directory, { binding = "react", tailwind }) {
+  const add = [BINDINGS[binding].integration, "node"];
+  if (tailwind) add.push("tailwind");
+
+  return npx([
+    "create-astro@latest",
+    directory,
+    "--template",
+    "minimal",
+    "--add",
+    add.join(","),
+    "--no-git",
+    "--no-ai",
+    "--skip-houston",
+    "--yes",
+  ]);
+}
+
+export function dependencies(answers) {
+  const server = serverDeps(answers);
+  return {
+    deps: { "better-content": BETTER_CONTENT, ...server.deps },
+    devDeps: server.devDeps,
+  };
+}
 
 const NOTES = {
   react: `\`src/components/Editable.tsx\` uses \`ContentEditSpan\`, which reads edit mode
@@ -58,7 +74,11 @@ renders the field value into the element and commits drafts on blur. Leave
 those elements childless: the action owns their text.`,
 };
 
-function editable(binding) {
+const attr = (name, value) => (value ? ` ${name}="${value}"` : "");
+const line = (indent, name, value) =>
+  value ? `\n${" ".repeat(indent)}${name}="${value}"` : "";
+
+function editable(binding, classes) {
   if (binding === "react") {
     return `import { useState } from "react";
 import type { ItemMap } from "better-content/core";
@@ -76,25 +96,28 @@ function Editor() {
   const { hasUnsavedChanges, saving, saveAll } = usePageContext();
 
   return (
-    <article className="page">
+    <article${attr("className", classes.page)}>
       <ContentEditSpan
-        as="h1"
+        as="h1"${line(8, "className", classes.h1)}
         collection="sections"
         itemId="hero"
         fieldKey="heading"
       />
       <ContentEditSpan
-        as="p"
+        as="p"${line(8, "className", classes.p)}
         collection="sections"
         itemId="hero"
         fieldKey="tagline"
       />
 
-      <div className="bar">
-        <button onClick={toggleEdit} aria-pressed={isEditing}>
+      <div${attr("className", classes.bar)}>
+        <button${line(10, "className", classes.button)}
+          onClick={toggleEdit}
+          aria-pressed={isEditing}
+        >
           {isEditing ? "Done" : "Edit"}
         </button>
-        <button
+        <button${line(10, "className", classes.button)}
           onClick={() => void saveAll()}
           disabled={!hasUnsavedChanges || saving}
         >
@@ -134,8 +157,10 @@ const editing = ref(false);
 </script>
 
 <template>
-  <article class="page">
-    <h1
+  <!-- v-content-edit renders the field value into these elements, so they are
+       intentionally empty here: the directive owns their text. -->
+  <article${attr("class", classes.page)}>
+    <h1${line(6, "class", classes.h1)}
       v-content-edit="{
         engine,
         collection: 'sections',
@@ -144,7 +169,7 @@ const editing = ref(false);
         editing,
       }"
     ></h1>
-    <p
+    <p${line(6, "class", classes.p)}
       v-content-edit="{
         engine,
         collection: 'sections',
@@ -154,11 +179,14 @@ const editing = ref(false);
       }"
     ></p>
 
-    <div class="bar">
-      <button :aria-pressed="editing" @click="editing = !editing">
+    <div${attr("class", classes.bar)}>
+      <button${line(8, "class", classes.button)}
+        :aria-pressed="editing"
+        @click="editing = !editing"
+      >
         {{ editing ? "Done" : "Edit" }}
       </button>
-      <button
+      <button${line(8, "class", classes.button)}
         :disabled="!snapshot.hasUnsavedChanges || snapshot.saving"
         @click="engine.saveAll()"
       >
@@ -175,15 +203,20 @@ const editing = ref(false);
   import { contentEdit, engineStore } from "better-content/svelte";
   import { createEngine } from "../lib/cms";
 
-  export let initialItems: ItemMap;
+  let { initialItems }: { initialItems: ItemMap } = $props();
 
+  // The snapshot the server rendered is handed over once and never swapped.
+  // svelte-ignore state_referenced_locally
   const engine = createEngine(initialItems);
   const snapshot = engineStore(engine);
-  let editing = false;
+  let editing = $state(false);
 </script>
 
-<article class="page">
-  <h1
+<!-- contentEdit renders the field value into these elements, so they are
+     intentionally empty here: the action owns their text. -->
+<article${attr("class", classes.page)}>
+  <!-- svelte-ignore a11y_missing_content -->
+  <h1${line(4, "class", classes.h1)}
     use:contentEdit={{
       engine,
       collection: "sections",
@@ -192,7 +225,8 @@ const editing = ref(false);
       editing,
     }}
   ></h1>
-  <p
+  <!-- svelte-ignore a11y_missing_content -->
+  <p${line(4, "class", classes.p)}
     use:contentEdit={{
       engine,
       collection: "sections",
@@ -202,13 +236,16 @@ const editing = ref(false);
     }}
   ></p>
 
-  <div class="bar">
-    <button aria-pressed={editing} on:click={() => (editing = !editing)}>
+  <div${attr("class", classes.bar)}>
+    <button${line(6, "class", classes.button)}
+      aria-pressed={editing}
+      onclick={() => (editing = !editing)}
+    >
       {editing ? "Done" : "Edit"}
     </button>
-    <button
+    <button${line(6, "class", classes.button)}
       disabled={!$snapshot.hasUnsavedChanges || $snapshot.saving}
-      on:click={() => engine.saveAll()}
+      onclick={() => engine.saveAll()}
     >
       {$snapshot.saving ? "Saving" : "Save"}
     </button>
@@ -218,8 +255,9 @@ const editing = ref(false);
 }
 
 export function files(answers) {
-  const { database, auth, name, binding = "react" } = answers;
+  const { database, auth, name, binding = "react", tailwind } = answers;
   const bind = BINDINGS[binding];
+  const { classes } = styleKit(tailwind);
 
   const layout = {
     dataPath: "src/lib/data.ts",
@@ -230,63 +268,7 @@ export function files(answers) {
     componentPath: `src/components/${bind.component}`,
   };
 
-  const deps = {
-    "@astrojs/node": "^11.0.2",
-    [bind.integration]: bind.integrationVersion,
-    astro: "^7.0.9",
-    "better-content": BETTER_CONTENT,
-    ...bind.deps,
-  };
-  const devDeps = { typescript: "^5.9.3", ...bind.devDeps };
-  const db = databaseDeps(database);
-  Object.assign(deps, db.deps);
-  Object.assign(devDeps, db.devDeps);
-
   const out = {
-    "package.json": `${JSON.stringify(
-      {
-        name,
-        private: true,
-        type: "module",
-        scripts: {
-          dev: "astro dev",
-          build: "astro build",
-          preview: "astro preview",
-          start: "node ./dist/server/entry.mjs",
-        },
-        dependencies: sorted(deps),
-        devDependencies: sorted(devDeps),
-      },
-      null,
-      2,
-    )}\n`,
-
-    "astro.config.mjs": `import { defineConfig } from "astro/config";
-import node from "@astrojs/node";
-import ${binding} from "${bind.integration}";
-
-export default defineConfig({
-  // The CMS routes and the initial content load both run on the server.
-  output: "server",
-  adapter: node({ mode: "standalone" }),
-  integrations: [${binding}()],
-});
-`,
-
-    "tsconfig.json": `${JSON.stringify(
-      {
-        extends: "astro/tsconfigs/strict",
-        include: [".astro/types.d.ts", "**/*"],
-        exclude: ["dist"],
-        ...(binding === "react"
-          ? { compilerOptions: { jsx: "react-jsx", jsxImportSource: "react" } }
-          : {}),
-      },
-      null,
-      2,
-    )}\n`,
-
-    ".gitignore": gitignore([".astro/"]),
     ".env.example": envExample(answers),
     "README.md": readme({
       host: { label: `Astro (${binding} island)`, bindingNote: NOTES[binding] },
@@ -299,12 +281,12 @@ npm run build
 node ./dist/server/entry.mjs
 \`\`\`
 
-That uses \`@astrojs/node\`. Swap it in \`astro.config.mjs\` for the Vercel,
-Netlify, or Cloudflare adapter to deploy with a platform adapter.`,
+That uses \`@astrojs/node\`, which \`create-astro\` wired up. Swap it in
+\`astro.config.mjs\` for the Vercel, Netlify, or Cloudflare adapter to deploy
+with a platform adapter.`,
     }),
 
-    "src/env.d.ts": `/// <reference types="astro/client" />\n`,
-    "src/styles.css": styles(),
+    "src/styles/global.css": stylesheet(tailwind),
     "src/lib/data.ts": dataModule(answers),
     "src/lib/auth.ts": authModule(answers),
     "src/lib/cms.ts": `import {
@@ -324,13 +306,16 @@ export function createEngine(initialItems: ItemMap): CmsEngine {
 }
 `,
 
-    [`src/components/${bind.component}`]: editable(binding),
+    [`src/components/${bind.component}`]: editable(binding, classes),
 
     "src/pages/index.astro": `---
 import { loadItemMap } from "better-content/server";
 import Editable from "${bind.importPath}";
 import { data } from "../lib/data";
-import "../styles.css";
+import "../styles/global.css";
+
+// This page reads the database on every request, so it cannot be prerendered.
+export const prerender = false;
 
 // Read on the server and handed to the island as a snapshot, so the first
 // paint already has real text in it. Defaults apply only when the row is
@@ -357,9 +342,9 @@ const initialItems = await loadItemMap(data, {
     <title>better-content starter</title>
   </head>
   <body>
-    <main>
+    <main${attr("class", classes.main)}>
       <Editable initialItems={initialItems} client:load />
-${auth === "token" ? `      <a class="admin-link" href="/admin">admin sign in</a>\n` : ""}    </main>
+${auth === "token" ? `      <a${attr("class", classes.link)} href="/admin">admin sign in</a>\n` : ""}    </main>
   </body>
 </html>
 `,
@@ -426,7 +411,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 `;
 
     out["src/pages/admin.astro"] = `---
-import "../styles.css";
+import "../styles/global.css";
+
+export const prerender = false;
 
 const failed = Astro.url.searchParams.has("error");
 ---
@@ -438,23 +425,23 @@ const failed = Astro.url.searchParams.has("error");
     <title>Sign in</title>
   </head>
   <body>
-    <main>
-      <form class="page" method="POST" action="/api/login">
-        <h1>Admin sign in</h1>
-        <p>
+    <main${attr("class", classes.main)}>
+      <form${attr("class", classes.page)} method="POST" action="/api/login">
+        <h1${attr("class", classes.h1)}>Admin sign in</h1>
+        <p${attr("class", classes.p)}>
           Enter the value of <code>ADMIN_TOKEN</code> to enable saving. Without
           it you can still toggle edit mode and type, but writes are rejected.
         </p>
-        {failed && <p class="error">That token did not match.</p>}
-        <input
+        {failed && <p${attr("class", classes.error)}>That token did not match.</p>}
+        <input${line(10, "class", classes.input)}
           type="password"
           name="token"
           placeholder="admin token"
           autocomplete="current-password"
           required
         />
-        <div class="bar">
-          <button type="submit">Sign in</button>
+        <div${attr("class", classes.bar)}>
+          <button${attr("class", classes.button)} type="submit">Sign in</button>
         </div>
       </form>
     </main>

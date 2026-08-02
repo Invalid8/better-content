@@ -1,12 +1,12 @@
 import {
   BETTER_CONTENT,
   authModule,
-  databaseDeps,
   dataModule,
   envExample,
   readme,
   schemaModule,
   schemaSql,
+  serverDeps,
   styleKit,
 } from "../shared.js";
 import { npx } from "../run.js";
@@ -40,11 +40,11 @@ export function scaffold(directory, { tailwind }) {
 
 export const globalCss = "src/app/globals.css";
 
-export function dependencies({ database }) {
-  const db = databaseDeps(database);
+export function dependencies(answers) {
+  const server = serverDeps(answers);
   return {
-    deps: { "better-content": BETTER_CONTENT, ...db.deps },
-    devDeps: db.devDeps,
+    deps: { "better-content": BETTER_CONTENT, ...server.deps },
+    devDeps: server.devDeps,
   };
 }
 

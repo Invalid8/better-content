@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export class CommandError extends Error {
@@ -39,7 +39,12 @@ export async function writeJson(dir, file, value) {
 }
 
 // Their scaffolder owns package.json; we only add what better-content needs.
-export async function mergeDependencies(dir, { deps = {}, devDeps = {} }) {
+// Scripts keep their order rather than being sorted, because npm run lists them
+// as written and theirs should stay where the reader expects.
+export async function mergeDependencies(
+  dir,
+  { deps = {}, devDeps = {}, scripts = {} },
+) {
   const pkg = await readJson(dir, "package.json");
 
   const merge = (existing = {}, added) =>
@@ -53,8 +58,58 @@ export async function mergeDependencies(dir, { deps = {}, devDeps = {} }) {
   if (Object.keys(devDeps).length) {
     pkg.devDependencies = merge(pkg.devDependencies, devDeps);
   }
+  if (Object.keys(scripts).length) {
+    pkg.scripts = { ...pkg.scripts, ...scripts };
+  }
 
   await writeJson(dir, "package.json", pkg);
+}
+
+// Their starter ships a demo page. We replace the app that rendered it, so the
+// pieces only that page used are dead weight. Best effort: a starter that stops
+// shipping one of these should not fail the scaffold.
+export function removeFiles(dir, paths) {
+  return Promise.all(
+    paths.map((path) => rm(join(dir, path), { force: true, recursive: true })),
+  );
+}
+
+// A framework config file is code rather than JSON, so we edit it as text.
+// Every insertion point is asserted: failing loudly here beats handing back a
+// project that silently missed the Tailwind plugin. `factory` is the config
+// call to insert into, defineConfig for Vite or defineNuxtConfig for Nuxt.
+export async function editConfig(
+  dir,
+  file,
+  { imports = [], plugins = [], options = "", factory = "defineConfig" },
+) {
+  let source = await readFile(join(dir, file), "utf8");
+
+  if (imports.length) {
+    const last = [...source.matchAll(/^import .*$/gm)].at(-1);
+    if (last) {
+      const at = last.index + last[0].length;
+      source = `${source.slice(0, at)}\n${imports.join("\n")}${source.slice(at)}`;
+    } else {
+      // Nuxt's config imports nothing, so go in below any leading comment.
+      const lead = /^(?:\/\/.*\n)*/.exec(source)[0];
+      source = `${lead}${imports.join("\n")}\n\n${source.slice(lead.length)}`;
+    }
+  }
+
+  if (plugins.length) {
+    const array = /plugins:\s*\[/;
+    if (!array.test(source)) throw new Error(`${file}: no plugins array to extend`);
+    source = source.replace(array, (match) => `${match}${plugins.join(", ")}, `);
+  }
+
+  if (options) {
+    const call = new RegExp(`${factory}\\(\\{`);
+    if (!call.test(source)) throw new Error(`${file}: no ${factory} call to extend`);
+    source = source.replace(call, (match) => `${match}\n${options}`);
+  }
+
+  await writeFile(join(dir, file), source, "utf8");
 }
 
 export async function appendFile(dir, file, contents) {
