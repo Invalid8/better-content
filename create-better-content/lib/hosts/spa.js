@@ -1,55 +1,109 @@
-import { BETTER_CONTENT, gitignore, sorted, styles } from "../shared.js";
+import { BETTER_CONTENT, styleKit } from "../shared.js";
+import { editViteConfig, npx, removeFiles } from "../run.js";
 
-// Client-only apps. There is no server here, so there is nothing to hold
-// database credentials and no gate to run: either you point the engine at an
-// API you already run (and gate it there), or you keep the whole database in
-// the browser with PGlite.
+// Client-only apps, scaffolded by create-vite. There is no server here, so
+// there is nothing to hold database credentials and no gate to run: either you
+// point the engine at an API you already run (and gate it there), or you keep
+// the whole database in the browser with PGlite.
 
 const FRAMEWORKS = {
   react: {
     label: "React",
     hint: "Vite, client only",
+    template: "react-ts",
     appFile: "src/App.tsx",
-    mainFile: "src/main.tsx",
-    mount: "root",
-    deps: { react: "^19.2.7", "react-dom": "^19.2.7" },
-    devDeps: {
-      "@types/react": "^19.2.17",
-      "@types/react-dom": "^19.2.3",
-      "@vitejs/plugin-react": "^5.0.4",
-    },
-    plugin: { import: 'import react from "@vitejs/plugin-react";', call: "react()" },
-    tsconfigExtra: { jsx: "react-jsx" },
+    editorFile: "src/App.tsx",
+    styleFile: "src/index.css",
+    // create-vite's demo page lives in these; the app that rendered it is gone.
+    demoFiles: ["src/App.css", "src/assets"],
   },
   vue: {
     label: "Vue",
     hint: "Vite, client only",
+    template: "vue-ts",
     appFile: "src/App.vue",
-    mainFile: "src/main.ts",
-    mount: "app",
-    deps: { vue: "^3.5.39" },
-    devDeps: { "@vitejs/plugin-vue": "^6.0.1", "vue-tsc": "^2.2.0" },
-    plugin: { import: 'import vue from "@vitejs/plugin-vue";', call: "vue()" },
-    tsconfigExtra: {},
+    editorFile: "src/Editor.vue",
+    styleFile: "src/style.css",
+    demoFiles: ["src/components", "src/assets"],
   },
   svelte: {
     label: "Svelte",
     hint: "Vite, client only",
+    template: "svelte-ts",
     appFile: "src/App.svelte",
-    mainFile: "src/main.ts",
-    mount: "app",
-    deps: { svelte: "^5.56.5" },
-    devDeps: {
-      "@sveltejs/vite-plugin-svelte": "^7.2.0",
-      "svelte-check": "^4.4.1",
-    },
-    plugin: {
-      import: 'import { svelte } from "@sveltejs/vite-plugin-svelte";',
-      call: "svelte()",
-    },
-    tsconfigExtra: {},
+    editorFile: "src/Editor.svelte",
+    styleFile: "src/app.css",
+    demoFiles: ["src/lib", "src/assets"],
   },
 };
+
+// PGlite ships a WASM build that must not be pre-bundled, and the Postgres
+// adapter lazy-imports "pg" for its node path, which never runs in a browser.
+const PGLITE_VITE_OPTIONS = `  optimizeDeps: { exclude: ["@electric-sql/pglite"] },
+  build: {
+    // The Postgres adapter lazy-imports "pg" for a path that never runs in a
+    // browser. Leave it external so the bundler stops looking for it.
+    rollupOptions: { external: ["pg"] },
+  },`;
+
+// styleKit leaves some slots empty (Tailwind needs no class where the plain
+// stylesheet has one), so emit the attribute only when it would carry a value.
+const attr = (name, value) => (value ? ` ${name}="${value}"` : "");
+
+// The same, for tags whose attributes are already one per line. Tailwind class
+// lists are long enough that inlining them makes the markup unreadable.
+const line = (indent, name, value) =>
+  value ? `\n${" ".repeat(indent)}${name}="${value}"` : "";
+
+function scaffold(framework, directory, { tailwind, transport }) {
+  const fw = FRAMEWORKS[framework];
+
+  return (async () => {
+    await npx([
+      "create-vite@latest",
+      directory,
+      "--template",
+      fw.template,
+      "--no-immediate",
+      "--no-interactive",
+    ]);
+
+    await removeFiles(directory, fw.demoFiles);
+
+    // create-vite offers no Tailwind option, so this is the one place we add a
+    // framework feature rather than delegate it. In v4 that is a Vite plugin
+    // plus one @import, and the stylesheet we write already carries the import.
+    const imports = [];
+    const plugins = [];
+    if (tailwind) {
+      // Single quotes, no semicolon: the file we are editing is create-vite's.
+      imports.push("import tailwindcss from '@tailwindcss/vite'");
+      plugins.push("tailwindcss()");
+    }
+
+    const options = transport === "pglite" ? PGLITE_VITE_OPTIONS : "";
+    if (imports.length || options) {
+      await editViteConfig(directory, { imports, plugins, options });
+    }
+  })();
+}
+
+function dependencies({ transport, tailwind }) {
+  const deps = { "better-content": BETTER_CONTENT };
+  const devDeps = {};
+
+  if (transport === "pglite") {
+    deps["@electric-sql/pglite"] = "^0.5.4";
+    deps["drizzle-orm"] = "^0.45.2";
+  }
+
+  if (tailwind) {
+    devDeps.tailwindcss = "^4.3.3";
+    devDeps["@tailwindcss/vite"] = "^4.3.3";
+  }
+
+  return { deps, devDeps };
+}
 
 const SEED = `{
   sections: [
@@ -160,14 +214,16 @@ export const SEED = \`
 \`;
 `;
 
-function appFiles(framework, transport) {
+function appFiles(framework, transport, tailwind) {
+  const { classes } = styleKit(tailwind);
   const persisted =
     transport === "pglite"
       ? "Reload the page and your edits are still there: they are rows in a real Postgres running in this tab."
       : "Saving sends the changes to your API, which decides whether to accept them.";
 
   if (framework === "react") {
-    return { "src/App.tsx": `import { useEffect, useState } from "react";
+    return {
+      "src/App.tsx": `import { useEffect, useState } from "react";
 import type { CmsEngine } from "better-content/core";
 import {
   AnonymousEditProvider,
@@ -183,25 +239,28 @@ function Editor() {
   const { hasUnsavedChanges, saving, saveAll } = usePageContext();
 
   return (
-    <article className="page">
+    <article${attr("className", classes.page)}>
       <ContentEditSpan
-        as="h1"
+        as="h1"${line(8, "className", classes.h1)}
         collection="sections"
         itemId="hero"
         fieldKey="heading"
       />
       <ContentEditSpan
-        as="p"
+        as="p"${line(8, "className", classes.p)}
         collection="sections"
         itemId="hero"
         fieldKey="tagline"
       />
 
-      <div className="bar">
-        <button onClick={toggleEdit} aria-pressed={isEditing}>
+      <div${attr("className", classes.bar)}>
+        <button${line(10, "className", classes.button)}
+          onClick={toggleEdit}
+          aria-pressed={isEditing}
+        >
           {isEditing ? "Done" : "Edit"}
         </button>
-        <button
+        <button${line(10, "className", classes.button)}
           onClick={() => void saveAll()}
           disabled={!hasUnsavedChanges || saving}
         >
@@ -209,7 +268,7 @@ function Editor() {
         </button>
       </div>
 
-      <p className="note">${persisted}</p>
+      <p${attr("className", classes.note)}>${persisted}</p>
     </article>
   );
 }
@@ -223,19 +282,26 @@ export default function App() {
     void ready.then(setEngine);
   }, []);
 
-  if (!engine) return <main><p className="note">Starting the engine…</p></main>;
+  if (!engine) {
+    return (
+      <main${attr("className", classes.main)}>
+        <p${attr("className", classes.note)}>Starting the engine…</p>
+      </main>
+    );
+  }
 
   return (
     <AnonymousEditProvider>
       <PageProvider engine={engine}>
-        <main>
+        <main${attr("className", classes.main)}>
           <Editor />
         </main>
       </PageProvider>
     </AnonymousEditProvider>
   );
 }
-` };
+`,
+    };
   }
 
   if (framework === "vue") {
@@ -256,9 +322,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
+  <main${attr("class", classes.main)}>
     <Editor v-if="engine" :engine="engine" />
-    <p v-else class="note">Starting the engine…</p>
+    <p v-else${attr("class", classes.note)}>Starting the engine…</p>
   </main>
 </template>
 `,
@@ -274,8 +340,10 @@ const editing = ref(false);
 </script>
 
 <template>
-  <article class="page">
-    <h1
+  <!-- v-content-edit renders the field value into these elements, so they are
+       intentionally empty here: the directive owns their text. -->
+  <article${attr("class", classes.page)}>
+    <h1${line(6, "class", classes.h1)}
       v-content-edit="{
         engine,
         collection: 'sections',
@@ -284,7 +352,7 @@ const editing = ref(false);
         editing,
       }"
     ></h1>
-    <p
+    <p${line(6, "class", classes.p)}
       v-content-edit="{
         engine,
         collection: 'sections',
@@ -294,11 +362,14 @@ const editing = ref(false);
       }"
     ></p>
 
-    <div class="bar">
-      <button :aria-pressed="editing" @click="editing = !editing">
+    <div${attr("class", classes.bar)}>
+      <button${line(8, "class", classes.button)}
+        :aria-pressed="editing"
+        @click="editing = !editing"
+      >
         {{ editing ? "Done" : "Edit" }}
       </button>
-      <button
+      <button${line(8, "class", classes.button)}
         :disabled="!snapshot.hasUnsavedChanges || snapshot.saving"
         @click="engine.saveAll()"
       >
@@ -306,7 +377,7 @@ const editing = ref(false);
       </button>
     </div>
 
-    <p class="note">${persisted}</p>
+    <p${attr("class", classes.note)}>${persisted}</p>
   </article>
 </template>
 `,
@@ -319,9 +390,9 @@ const editing = ref(false);
   import { ready } from "./cms";
 </script>
 
-<main>
+<main${attr("class", classes.main)}>
   {#await ready}
-    <p class="note">Starting the engine…</p>
+    <p${attr("class", classes.note)}>Starting the engine…</p>
   {:then engine}
     <Editor {engine} />
   {/await}
@@ -333,12 +404,17 @@ const editing = ref(false);
 
   let { engine }: { engine: CmsEngine } = $props();
 
+  // The engine is handed over once, after it resolves, and never swapped.
+  // svelte-ignore state_referenced_locally
   const snapshot = engineStore(engine);
   let editing = $state(false);
 </script>
 
-<article class="page">
-  <h1
+<!-- contentEdit renders the field value into these elements, so they are
+     intentionally empty here: the action owns their text. -->
+<article${attr("class", classes.page)}>
+  <!-- svelte-ignore a11y_missing_content -->
+  <h1${line(4, "class", classes.h1)}
     use:contentEdit={{
       engine,
       collection: "sections",
@@ -347,7 +423,8 @@ const editing = ref(false);
       editing,
     }}
   ></h1>
-  <p
+  <!-- svelte-ignore a11y_missing_content -->
+  <p${line(4, "class", classes.p)}
     use:contentEdit={{
       engine,
       collection: "sections",
@@ -357,11 +434,14 @@ const editing = ref(false);
     }}
   ></p>
 
-  <div class="bar">
-    <button aria-pressed={editing} onclick={() => (editing = !editing)}>
+  <div${attr("class", classes.bar)}>
+    <button${line(6, "class", classes.button)}
+      aria-pressed={editing}
+      onclick={() => (editing = !editing)}
+    >
       {editing ? "Done" : "Edit"}
     </button>
-    <button
+    <button${line(6, "class", classes.button)}
       disabled={!$snapshot.hasUnsavedChanges || $snapshot.saving}
       onclick={() => engine.saveAll()}
     >
@@ -369,133 +449,27 @@ const editing = ref(false);
     </button>
   </div>
 
-  <p class="note">${persisted}</p>
+  <p${attr("class", classes.note)}>${persisted}</p>
 </article>
 `,
   };
 }
 
-function mainFile(framework) {
-  if (framework === "react") {
-    return `import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./styles.css";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
-`;
-  }
-
-  if (framework === "vue") {
-    return `import { createApp } from "vue";
-import App from "./App.vue";
-import "./styles.css";
-
-createApp(App).mount("#app");
-`;
-  }
-
-  return `import { mount } from "svelte";
-import App from "./App.svelte";
-import "./styles.css";
-
-export default mount(App, { target: document.getElementById("app")! });
-`;
+// create-vite's stylesheet styles the demo page we just deleted, down to a
+// fixed-width centred #root, so we replace it rather than layer on top of it.
+function stylesheet(tailwind) {
+  const { css } = styleKit(tailwind);
+  return tailwind ? `@import "tailwindcss";\n\n${css}\n` : `${css}\n`;
 }
 
 function buildFiles(framework, answers) {
-  const { transport = "rest", name } = answers;
+  const { transport = "rest", tailwind, name } = answers;
   const fw = FRAMEWORKS[framework];
 
-  const deps = { "better-content": BETTER_CONTENT, ...fw.deps };
-  const devDeps = { typescript: "^5.9.3", vite: "^8.1.5", ...fw.devDeps };
-
-  if (transport === "pglite") {
-    devDeps["@electric-sql/pglite"] = "^0.5.4";
-    devDeps["drizzle-orm"] = "^0.45.0";
-  }
-
   const out = {
-    "package.json": `${JSON.stringify(
-      {
-        name,
-        private: true,
-        type: "module",
-        scripts: { dev: "vite", build: "vite build", preview: "vite preview" },
-        dependencies: sorted(deps),
-        devDependencies: sorted(devDeps),
-      },
-      null,
-      2,
-    )}\n`,
-
-    "vite.config.ts": `import { defineConfig } from "vite";
-${fw.plugin.import}
-
-export default defineConfig({
-  plugins: [${fw.plugin.call}],${
-    transport === "pglite"
-      ? `
-  optimizeDeps: { exclude: ["@electric-sql/pglite"] },
-  build: {
-    // The Postgres adapter lazy-imports "pg" for its node path, which never
-    // runs in a browser. Leave it external so the bundler stops looking.
-    rollupOptions: { external: ["pg"] },
-  },`
-      : ""
-  }
-});
-`,
-
-    "tsconfig.json": `${JSON.stringify(
-      {
-        compilerOptions: {
-          target: "ES2022",
-          lib: ["ES2022", "DOM", "DOM.Iterable"],
-          module: "ESNext",
-          moduleResolution: "bundler",
-          strict: true,
-          noEmit: true,
-          skipLibCheck: true,
-          isolatedModules: true,
-          resolveJsonModule: true,
-          ...fw.tsconfigExtra,
-        },
-        include: ["src"],
-      },
-      null,
-      2,
-    )}\n`,
-
-    "index.html": `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>better-content starter</title>
-  </head>
-  <body>
-    <div id="${fw.mount}"></div>
-    <script type="module" src="/${fw.mainFile}"></script>
-  </body>
-</html>
-`,
-
-    ".gitignore": gitignore([]),
-    "src/styles.css": `${styles()}
-.note {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-top: 1.25rem;
-}
-`,
+    [fw.styleFile]: stylesheet(tailwind),
     "src/cms.ts": cmsModule(transport),
-    [fw.mainFile]: mainFile(framework),
-    ...appFiles(framework, transport),
+    ...appFiles(framework, transport, tailwind),
   };
 
   if (transport === "pglite") {
@@ -507,12 +481,12 @@ VITE_API_BASE_PATH=/api/admin
 `;
   }
 
-  out["README.md"] = readmeFor(framework, transport, name, fw);
+  out["README.md"] = readmeFor(framework, transport, tailwind, name, fw);
 
   return out;
 }
 
-function readmeFor(framework, transport, name, fw) {
+function readmeFor(framework, transport, tailwind, name, fw) {
   const how =
     transport === "pglite"
       ? `## How it works
@@ -543,6 +517,13 @@ export const { GET, PUT, PATCH, DELETE } = createCmsHandlers({ data, auth });
 gives visitors a local edit toggle without claiming they are an admin. Nothing
 in a browser can decide whether a write is allowed, so the server has to.`;
 
+  const binding =
+    framework === "react"
+      ? "`ContentEditSpan` reads edit mode from context and commits drafts on blur; `EditableImage` and `useMarkdownEditor` come from the same import."
+      : framework === "vue"
+        ? "The `v-content-edit` directive renders the field value into the element and commits drafts on blur; `useEditableImage` handles image fields."
+        : "The `contentEdit` action renders the field value into the element and commits drafts on blur; `imageEdit` handles image fields.";
+
   return `# ${name}
 
 Inline editing in a plain ${fw.label} app, built with
@@ -553,17 +534,18 @@ npm install${transport === "pglite" ? "" : "\ncp .env.example .env"}
 npm run dev
 \`\`\`
 
+The project itself came from \`create-vite\`, so its build, TypeScript, and
+lint setup are the ones Vite ships and documents.${
+    tailwind
+      ? " Tailwind CSS v4 is wired\nin through `@tailwindcss/vite`, which means `npx shadcn@latest init` works\nfrom here."
+      : ""
+  }
+
 ${how}
 
 ## The editable parts
 
-\`${fw.appFile}\` holds the UI. ${
-    framework === "react"
-      ? "`ContentEditSpan` reads edit mode from context and commits drafts on blur; `EditableImage` and `useMarkdownEditor` come from the same import."
-      : framework === "vue"
-        ? "The `v-content-edit` directive renders the field value into the element and commits drafts on blur; `useEditableImage` handles image fields."
-        : "The `contentEdit` action renders the field value into the element and commits drafts on blur; `imageEdit` handles image fields."
-  }
+\`${fw.editorFile}\` holds the UI. ${binding}
 
 Field edits buffer locally and flush when you press Save. Item operations
 (create, update, delete, reorder) apply immediately and roll back if the write
@@ -585,6 +567,9 @@ export const hosts = Object.entries(FRAMEWORKS).map(([value, fw]) => ({
     label: fw.label,
     hint: fw.hint,
     clientOnly: true,
+    tailwind: true,
   },
+  scaffold: (directory, settings) => scaffold(value, directory, settings),
+  dependencies,
   files: (answers) => buildFiles(value, answers),
 }));

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export class CommandError extends Error {
@@ -55,6 +55,44 @@ export async function mergeDependencies(dir, { deps = {}, devDeps = {} }) {
   }
 
   await writeJson(dir, "package.json", pkg);
+}
+
+// Their starter ships a demo page. We replace the app that rendered it, so the
+// pieces only that page used are dead weight. Best effort: a starter that stops
+// shipping one of these should not fail the scaffold.
+export function removeFiles(dir, paths) {
+  return Promise.all(
+    paths.map((path) => rm(join(dir, path), { force: true, recursive: true })),
+  );
+}
+
+// vite.config.ts is code rather than JSON, so we edit it as text. Every
+// insertion point is asserted: failing loudly here beats handing back a project
+// that silently missed the Tailwind plugin.
+export async function editViteConfig(dir, { imports = [], plugins = [], options = "" }) {
+  const file = "vite.config.ts";
+  let source = await readFile(join(dir, file), "utf8");
+
+  if (imports.length) {
+    const last = [...source.matchAll(/^import .*$/gm)].at(-1);
+    if (!last) throw new Error(`${file}: no import statement to anchor to`);
+    const at = last.index + last[0].length;
+    source = `${source.slice(0, at)}\n${imports.join("\n")}${source.slice(at)}`;
+  }
+
+  if (plugins.length) {
+    const array = /plugins:\s*\[/;
+    if (!array.test(source)) throw new Error(`${file}: no plugins array to extend`);
+    source = source.replace(array, (match) => `${match}${plugins.join(", ")}, `);
+  }
+
+  if (options) {
+    const call = /defineConfig\(\{/;
+    if (!call.test(source)) throw new Error(`${file}: no defineConfig call to extend`);
+    source = source.replace(call, (match) => `${match}\n${options}`);
+  }
+
+  await writeFile(join(dir, file), source, "utf8");
 }
 
 export async function appendFile(dir, file, contents) {

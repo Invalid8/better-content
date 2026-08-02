@@ -61,11 +61,13 @@ lowest-common-denominator shell. A Next.js app has `app/`, route handlers, and
 a server component; a SvelteKit app has `+page.server.ts` and `+server.ts`; a
 Nuxt app has `server/api` and Nitro handlers.
 
-Choosing **Next.js** runs `create-next-app` itself and adds better-content to
-the result, so you get that CLI's own options and current versions, and
-`npx shadcn@latest init` works afterwards because it is a real Next app. The
-other frameworks use templates in this package for now; they are moving to the
-same delegated approach in later releases.
+Choosing **Next.js** runs `create-next-app` itself, and **React, Vue, or
+Svelte** runs `create-vite`; either way better-content is added to the result.
+You get that CLI's own options and current versions rather than this package's
+copy of them, and `npx shadcn@latest init` works afterwards because what you
+have is a real Next or Vite app. Nuxt, SvelteKit, and Astro still use templates
+in this package; they are moving to the same delegated approach in later
+releases.
 
 What they share is the part that belongs to better-content, and it stays small
 in every one of them:
