@@ -84,6 +84,52 @@ hydrates from.
 - `fallback` applies only when the fetch **throws** (an empty result is a
   valid result). Without a fallback the error propagates.
 
+## createContentHandler
+
+```ts
+function createContentHandler(deps: {
+  data: DataAdapter;
+  collections: ItemMapLoadConfig;   // same shape loadItemMap takes
+  auth?: AuthAdapter;               // omit for a public endpoint
+  authorize?: AuthorizeFn;
+  cacheControl?: string;            // default "no-store"
+  onError?: (error: unknown) => void;
+}): { GET: (req?: Request) => Promise<Response> };
+```
+
+The public **read** half of the CMS: it returns the same `ItemMap` a
+server-rendered page would build with `loadItemMap`, as JSON.
+
+`createCmsHandlers` covers writes. Its `GET` is admin-gated and fetches a
+single document by id, so it cannot answer "the content for this page". Any
+app rendering on the client needs this route instead, paired with
+[`fetchItemMap`](/api/core#fetchitemmap).
+
+```ts
+// Next.js: src/app/api/content/route.ts
+import { createContentHandler } from "better-content/server";
+import { data } from "@/lib/data";
+
+export const { GET } = createContentHandler({
+  data,
+  collections: {
+    sections: {
+      defaults: [{ id: "hero", heading: "Edit this heading" }],
+      merge: "byId",
+    },
+  },
+});
+```
+
+It is public by default, because it only ever reads the content the page
+already shows. Pass `auth` to gate it, for a site whose content is not public;
+note that a browser visitor then cannot read it either, which is usually not
+what you want.
+
+Adapter failures answer `{ error: "Request failed" }` with a 500 and go to
+`onError` (default `console.error`), the same as `createCmsHandlers`, so query
+text and parameter values never reach the client.
+
 ## resolveRelations
 
 ```ts

@@ -5,6 +5,74 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-02
+
+### Added
+
+- `createContentHandler({ data, collections })` in `better-content/server`:
+  the public read half of the CMS. It returns the same `ItemMap` a
+  server-rendered page would build with `loadItemMap`, over HTTP. Public by
+  default, with optional `auth`/`authorize` to gate it, `cacheControl`
+  (default `no-store`), and the same `onError` handling as
+  `createCmsHandlers`, so adapter messages never reach the client.
+- `fetchItemMap(url, options?)` in `better-content/core`: the client-side
+  counterpart. Reads a snapshot over HTTP for apps with no server of their
+  own, and rejects a 200 that is not an object, which is what a misrouted
+  URL returning `index.html` looks like.
+
+  Together these close a real gap. `Transport` only writes, and reading went
+  through `loadItemMap`, which needs a `DataAdapter` and so cannot run in a
+  browser. The `GET` on `createCmsHandlers` is admin-gated and fetches one
+  document by id, so it could not answer "the content for this page" either.
+  A client-only app could therefore save edits it was unable to display.
+
+  ```ts
+  // server
+  export const { GET } = createContentHandler({
+    data,
+    collections: { sections: { defaults, merge: "byId" } },
+  });
+
+  // client
+  const initialItems = await fetchItemMap("/api/content");
+  ```
+
+- **Google auth**, a second provider for the `AuthAdapter` seam.
+
+  `better-content/auth/google` exports `googleAuth({ clientId, adminEmails })`
+  and a standalone `verifyGoogleIdToken`. Sign in with Google with no Firebase
+  project and no service account: the ID token is verified locally, RS256
+  against Google's published JWKS plus `exp` / `iss` / `aud`, with the JWKS
+  cached per Google's own `cache-control`. Admin requires the signature to
+  verify **and** `email_verified` to be true **and** the email to be
+  allowlisted. No runtime dependency; Node's crypto and `fetch`.
+
+  `better-content/auth/google/client` exports `GoogleAuthProvider`,
+  `GoogleSignInButton` and `useGoogleAuth`. Three ways to sign in, because an
+  ID token can only come from Google's own button or One Tap:
+
+  - `<GoogleSignInButton />` forwards **every** option Google exposes
+    (`width`, `logo_alignment`, `type`, `containerProps`, and the rest), not a
+    hand-picked few.
+  - `oneTap` on the provider shows One Tap, so there is no button at all.
+  - `useGoogleAuth().applyCredential(idToken)` takes a credential you obtained
+    yourself, so you can render any UI and run your own flow.
+
+  Peer: `@react-oauth/google` >= 0.12, optional, needed only for the client
+  entry point.
+
+- `better-content/react` re-exports the `Notifier` and `PendingImage` types.
+  Both are React-facing in practice (`notify` is a `PageProvider` prop,
+  `pendingImages` is on the context), so configuring one provider no longer
+  means importing from two entry points.
+
+### Docs
+
+- The auth and storage pages now say plainly that Firebase and Cloudinary are
+  the only providers shipping today, that more are coming gradually, and how
+  to write an `AuthAdapter` or `ClientStorageAdapter` yourself in the
+  meantime. Both seams are one method.
+
 ## [0.3.1] - 2026-07-27
 
 ### Fixed

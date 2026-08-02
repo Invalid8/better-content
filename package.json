@@ -1,6 +1,6 @@
 {
   "name": "better-content",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Framework-neutral, own-your-data, adapter-driven inline-edit CMS engine.",
   "license": "MIT",
   "type": "module",
@@ -66,6 +66,16 @@
       "import": "./dist/auth/firebase/client.js",
       "require": "./dist/auth/firebase/client.cjs"
     },
+    "./auth/google": {
+      "types": "./dist/auth/google.d.ts",
+      "import": "./dist/auth/google.js",
+      "require": "./dist/auth/google.cjs"
+    },
+    "./auth/google/client": {
+      "types": "./dist/auth/google/client.d.ts",
+      "import": "./dist/auth/google/client.js",
+      "require": "./dist/auth/google/client.cjs"
+    },
     "./devtools": {
       "types": "./dist/devtools.d.ts",
       "import": "./dist/devtools.js",
@@ -88,6 +98,7 @@
     }
   },
   "peerDependencies": {
+    "@react-oauth/google": ">=0.12",
     "cloudinary": ">=2",
     "drizzle-orm": ">=0.40",
     "firebase": ">=10",
@@ -117,6 +128,9 @@
     },
     "vue": {
       "optional": "true"
+    },
+    "@react-oauth/google": {
+      "optional": true
     }
   },
   "scripts": {
@@ -134,6 +148,7 @@
   ],
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.4",
+    "@react-oauth/google": "^0.13.5",
     "@testing-library/react": "^16.3.2",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",

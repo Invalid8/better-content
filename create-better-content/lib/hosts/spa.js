@@ -159,27 +159,44 @@ export const ready: Promise<CmsEngine> = (async () => {
 
   return `import {
   createCmsEngine,
+  fetchItemMap,
   restTransport,
   type CmsEngine,
   type ItemMap,
 } from "better-content/core";
 
 // This app has no server of its own, which is the point: it talks to an API
-// you already run. Mount createCmsHandlers there (see the docs) and gate the
-// writes on that side. A browser can never be trusted with credentials, so
-// the admin check has to live where you control it.
+// you already run. A browser can never be trusted with credentials, so the
+// admin check has to live where you control it.
+//
+// That API needs two routes, and it is worth knowing why. A transport only
+// writes, so createCmsHandlers alone would leave this app able to save edits
+// it could never display: reload and you would be back to the seed below.
+// createContentHandler is the read half.
 const apiBasePath = import.meta.env.VITE_API_BASE_PATH ?? "/api/admin";
+const contentUrl = import.meta.env.VITE_CONTENT_URL ?? "/api/content";
 
-// The engine just needs a snapshot to start from. Replace this with a fetch
-// from your own read endpoint once you have one.
-const initialItems: ItemMap = ${SEED};
+// Only used until the read endpoint answers, so the app runs before you have
+// built one. Once it does, this is dead weight and can go.
+const seed: ItemMap = ${SEED};
 
-export const ready: Promise<CmsEngine> = Promise.resolve(
-  createCmsEngine({
+export const ready: Promise<CmsEngine> = (async () => {
+  let initialItems = seed;
+
+  try {
+    initialItems = await fetchItemMap(contentUrl);
+  } catch (error) {
+    console.warn(
+      \`[cms] could not read \${contentUrl}, falling back to seed content.\`,
+      error,
+    );
+  }
+
+  return createCmsEngine({
     transport: restTransport({ apiBasePath }),
     initialItems,
-  }),
-);
+  });
+})();
 `;
 }
 
@@ -470,7 +487,13 @@ function buildFiles(framework, answers) {
   } else {
     out[".env.example"] = `# Where your better-content API is mounted. It must be an API you run,
 # because this app is client only and cannot hold credentials itself.
+
+# Writes: createCmsHandlers, gated on your side.
 VITE_API_BASE_PATH=/api/admin
+
+# Reads: createContentHandler, public. Without this the app can save edits it
+# cannot display.
+VITE_CONTENT_URL=/api/content
 `;
   }
 
@@ -495,20 +518,44 @@ engine work without provisioning anything. When you outgrow it, swap
 the components do not change.`
       : `## How it works
 
-There is no server in this project, on purpose. \`src/cms.ts\` points
-\`restTransport\` at \`VITE_API_BASE_PATH\`, so writes go to an API you run.
+There is no server in this project, on purpose. \`src/cms.ts\` talks to an API
+you run: \`VITE_API_BASE_PATH\` for writes, \`VITE_CONTENT_URL\` for reads.
 
-Mount the handlers there:
+You need **both** routes on that API. A transport only writes, so mounting the
+admin handlers alone leaves this app able to save edits it can never display:
+reload and you are back to the seed in \`src/cms.ts\`.
 
 \`\`\`ts
+// Writes. Gate these. (Next.js: src/app/api/admin/[collection]/[id]/route.ts)
 import { createCmsHandlers } from "better-content/server";
 
 export const { GET, PUT, PATCH, DELETE } = createCmsHandlers({ data, auth });
 \`\`\`
 
+\`\`\`ts
+// Reads. Public. (Next.js: src/app/api/content/route.ts)
+import { createContentHandler } from "better-content/server";
+
+export const { GET } = createContentHandler({
+  data,
+  collections: {
+    sections: {
+      defaults: [{ id: "hero", heading: "Edit this heading" }],
+      merge: "byId",
+    },
+  },
+});
+\`\`\`
+
+The read route is public because it only returns the content the page already
+shows. The write route is not.
+
 **Gate the writes on that side.** This app uses \`AnonymousEditProvider\`, which
 gives visitors a local edit toggle without claiming they are an admin. Nothing
-in a browser can decide whether a write is allowed, so the server has to.`;
+in a browser can decide whether a write is allowed, so the server has to.
+
+Until the read route exists, \`src/cms.ts\` logs a warning and falls back to its
+seed content, so the app still runs.`;
 
   const binding =
     framework === "react"

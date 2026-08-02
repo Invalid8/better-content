@@ -190,14 +190,15 @@ ${auth === "token" ? `    <a${attr("class", classes.link)} href="/admin">admin s
     "server/lib/data.ts": dataModule(answers),
     "server/lib/auth.ts": authModule(answers),
 
-    "server/api/content.get.ts": `import { loadItemMap } from "better-content/server";
+    "server/api/content.get.ts": `import { createContentHandler } from "better-content/server";
 import { data } from "~~/server/lib/data";
 
 // Public read of the initial snapshot. Writes go through /api/admin, which is
 // gated; this route only ever reads. The defaults apply when the row is
 // missing, so a fresh database renders sensibly instead of blank.
-export default defineEventHandler(async () =>
-  loadItemMap(data, {
+const { GET } = createContentHandler({
+  data,
+  collections: {
     sections: {
       defaults: [
         {
@@ -209,8 +210,10 @@ export default defineEventHandler(async () =>
       ],
       merge: "byId",
     },
-  }),
-);
+  },
+});
+
+export default defineEventHandler((event) => GET(toWebRequest(event)));
 `,
 
     "server/api/admin/[collection]/[id].ts": `import { createCmsHandlers } from "better-content/server";

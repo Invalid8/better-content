@@ -2,6 +2,11 @@ export {
   createCmsHandlers,
   type CmsHandlersDeps,
 } from "./createCmsHandlers";
+export {
+  createContentHandler,
+  type ContentHandlerDeps,
+  type ContentRouteHandler,
+} from "./createContentHandler";
 export { createAdminGate, UnauthorizedError } from "./createAdminGate";
 export {
   resolveRelations,
