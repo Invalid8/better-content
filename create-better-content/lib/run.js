@@ -39,7 +39,12 @@ export async function writeJson(dir, file, value) {
 }
 
 // Their scaffolder owns package.json; we only add what better-content needs.
-export async function mergeDependencies(dir, { deps = {}, devDeps = {} }) {
+// Scripts keep their order rather than being sorted, because npm run lists them
+// as written and theirs should stay where the reader expects.
+export async function mergeDependencies(
+  dir,
+  { deps = {}, devDeps = {}, scripts = {} },
+) {
   const pkg = await readJson(dir, "package.json");
 
   const merge = (existing = {}, added) =>
@@ -52,6 +57,9 @@ export async function mergeDependencies(dir, { deps = {}, devDeps = {} }) {
   pkg.dependencies = merge(pkg.dependencies, deps);
   if (Object.keys(devDeps).length) {
     pkg.devDependencies = merge(pkg.devDependencies, devDeps);
+  }
+  if (Object.keys(scripts).length) {
+    pkg.scripts = { ...pkg.scripts, ...scripts };
   }
 
   await writeJson(dir, "package.json", pkg);
@@ -66,18 +74,27 @@ export function removeFiles(dir, paths) {
   );
 }
 
-// vite.config.ts is code rather than JSON, so we edit it as text. Every
-// insertion point is asserted: failing loudly here beats handing back a project
-// that silently missed the Tailwind plugin.
-export async function editViteConfig(dir, { imports = [], plugins = [], options = "" }) {
-  const file = "vite.config.ts";
+// A framework config file is code rather than JSON, so we edit it as text.
+// Every insertion point is asserted: failing loudly here beats handing back a
+// project that silently missed the Tailwind plugin. `factory` is the config
+// call to insert into, defineConfig for Vite or defineNuxtConfig for Nuxt.
+export async function editConfig(
+  dir,
+  file,
+  { imports = [], plugins = [], options = "", factory = "defineConfig" },
+) {
   let source = await readFile(join(dir, file), "utf8");
 
   if (imports.length) {
     const last = [...source.matchAll(/^import .*$/gm)].at(-1);
-    if (!last) throw new Error(`${file}: no import statement to anchor to`);
-    const at = last.index + last[0].length;
-    source = `${source.slice(0, at)}\n${imports.join("\n")}${source.slice(at)}`;
+    if (last) {
+      const at = last.index + last[0].length;
+      source = `${source.slice(0, at)}\n${imports.join("\n")}${source.slice(at)}`;
+    } else {
+      // Nuxt's config imports nothing, so go in below any leading comment.
+      const lead = /^(?:\/\/.*\n)*/.exec(source)[0];
+      source = `${lead}${imports.join("\n")}\n\n${source.slice(lead.length)}`;
+    }
   }
 
   if (plugins.length) {
@@ -87,8 +104,8 @@ export async function editViteConfig(dir, { imports = [], plugins = [], options 
   }
 
   if (options) {
-    const call = /defineConfig\(\{/;
-    if (!call.test(source)) throw new Error(`${file}: no defineConfig call to extend`);
+    const call = new RegExp(`${factory}\\(\\{`);
+    if (!call.test(source)) throw new Error(`${file}: no ${factory} call to extend`);
     source = source.replace(call, (match) => `${match}\n${options}`);
   }
 

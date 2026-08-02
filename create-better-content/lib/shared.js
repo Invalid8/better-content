@@ -1,11 +1,8 @@
 // Pieces that are identical whatever host framework you picked. Everything
-// here reads config from process.env, which every one of the four hosts
-// supports, so these files never need a host-specific variant.
+// here reads config from process.env, which every full-stack host supports
+// except SvelteKit, so these files rarely need a host-specific variant.
 
 export const BETTER_CONTENT = "^0.3.1";
-
-export const sorted = (object) =>
-  Object.fromEntries(Object.entries(object).sort(([a], [b]) => (a < b ? -1 : 1)));
 
 const FIREBASE_ADMIN = "^14.1.0";
 
@@ -248,114 +245,6 @@ export function envExample({ database, auth }) {
   return `${lines.join("\n")}\n`;
 }
 
-export const gitignore = (extra = []) =>
-  `${["node_modules/", "dist/", ".env", ".env.*", "!.env.example", ".DS_Store", ...extra].join("\n")}\n`;
-
-export const styles = () => `:root {
-  color-scheme: light dark;
-  --ink: #1b1a18;
-  --muted: #5c5751;
-  --line: #e2ddd2;
-  --paper: #faf8f3;
-  --accent: #c8622f;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #ece8e0;
-    --muted: #a29c93;
-    --line: #2f2c28;
-    --paper: #14130f;
-  }
-}
-
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 16px/1.6 ui-sans-serif, system-ui, sans-serif;
-}
-
-main {
-  max-width: 42rem;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
-}
-
-.page h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1.1;
-  margin: 0 0 1rem;
-}
-
-.page p {
-  color: var(--muted);
-  margin: 0 0 2rem;
-}
-
-.bar {
-  display: flex;
-  gap: 0.6rem;
-  border-top: 1px solid var(--line);
-  padding-top: 1.25rem;
-}
-
-button {
-  font: inherit;
-  padding: 0.45rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-button[aria-pressed="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-input {
-  font: inherit;
-  width: 100%;
-  padding: 0.5rem 0.7rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-}
-
-.error {
-  color: var(--accent);
-  margin-bottom: 1rem;
-}
-
-.admin-link {
-  display: inline-block;
-  margin-top: 2rem;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-/* Styling hooks the editing primitives set on whatever element you bind. */
-[data-cms-editing] {
-  border-radius: 3px;
-  outline: 1px dashed var(--line);
-  outline-offset: 3px;
-  cursor: text;
-}
-
-[data-cms-focused] {
-  outline: 2px solid var(--accent);
-}
-`;
-
 export function readme({ host, database, auth, name, layout, deploy }) {
   const dbSetup =
     database === "postgres"
@@ -501,6 +390,14 @@ export function styleKit(tailwind) {
     },
     css: `${PLAIN_CSS}\n${CMS_HOOKS_CSS}`,
   };
+}
+
+// A delegated starter's stylesheet is written for the demo page it ships. Hosts
+// that replace that page own this file outright rather than appending to it,
+// and Tailwind's @import has to lead the file anyway.
+export function stylesheet(tailwind) {
+  const { css } = styleKit(tailwind);
+  return tailwind ? `@import "tailwindcss";\n\n${css}\n` : `${css}\n`;
 }
 
 const CMS_HOOKS_CSS = `/* Styling hooks the editing primitives set on whatever element you bind. */

@@ -27,8 +27,8 @@ genuinely different answers:
 | Where content lives: Postgres or Firestore | Where writes go: an API you already run, or Postgres in the browser (PGlite) |
 | How writes are gated: admin token or Firebase | nothing to ask, because a browser cannot hold credentials or gate anything |
 
-Frameworks that delegate to their own scaffolder also ask whether you want
-Tailwind CSS.
+It also asks whether you want Tailwind CSS, and generates the editable page
+with Tailwind utilities or a small stylesheet to match.
 
 Pick Astro and it asks one more thing: which framework to use for the island
 (React, Vue, or Svelte).
@@ -61,13 +61,20 @@ lowest-common-denominator shell. A Next.js app has `app/`, route handlers, and
 a server component; a SvelteKit app has `+page.server.ts` and `+server.ts`; a
 Nuxt app has `server/api` and Nitro handlers.
 
-Choosing **Next.js** runs `create-next-app` itself, and **React, Vue, or
-Svelte** runs `create-vite`; either way better-content is added to the result.
-You get that CLI's own options and current versions rather than this package's
-copy of them, and `npx shadcn@latest init` works afterwards because what you
-have is a real Next or Vite app. Nuxt, SvelteKit, and Astro still use templates
-in this package; they are moving to the same delegated approach in later
-releases.
+Every framework is scaffolded by its own official CLI, and better-content is
+added to the result:
+
+| Framework | Runs |
+|---|---|
+| Next.js | `create-next-app` |
+| Nuxt | `nuxi init` |
+| SvelteKit | `sv create` |
+| Astro | `create-astro` |
+| React, Vue, Svelte | `create-vite` |
+
+So you get that CLI's own options and current versions rather than this
+package's copy of them, and `npx shadcn@latest init` works afterwards because
+what you have is a real Next, Nuxt, SvelteKit, Astro, or Vite app.
 
 What they share is the part that belongs to better-content, and it stays small
 in every one of them:

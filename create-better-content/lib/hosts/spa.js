@@ -1,5 +1,5 @@
-import { BETTER_CONTENT, styleKit } from "../shared.js";
-import { editViteConfig, npx, removeFiles } from "../run.js";
+import { BETTER_CONTENT, styleKit, stylesheet } from "../shared.js";
+import { editConfig, npx, removeFiles } from "../run.js";
 
 // Client-only apps, scaffolded by create-vite. There is no server here, so
 // there is nothing to hold database credentials and no gate to run: either you
@@ -83,7 +83,7 @@ function scaffold(framework, directory, { tailwind, transport }) {
 
     const options = transport === "pglite" ? PGLITE_VITE_OPTIONS : "";
     if (imports.length || options) {
-      await editViteConfig(directory, { imports, plugins, options });
+      await editConfig(directory, "vite.config.ts", { imports, plugins, options });
     }
   })();
 }
@@ -453,13 +453,6 @@ const editing = ref(false);
 </article>
 `,
   };
-}
-
-// create-vite's stylesheet styles the demo page we just deleted, down to a
-// fixed-width centred #root, so we replace it rather than layer on top of it.
-function stylesheet(tailwind) {
-  const { css } = styleKit(tailwind);
-  return tailwind ? `@import "tailwindcss";\n\n${css}\n` : `${css}\n`;
 }
 
 function buildFiles(framework, answers) {
