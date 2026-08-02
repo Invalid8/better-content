@@ -17,7 +17,7 @@
     "@fontsource/ibm-plex-serif": "^5.2.7",
     "@lucide/astro": "^1.24.0",
     "astro": "^7.0.9",
-    "better-content": "^0.3.1",
+    "better-content": "^0.4.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "simple-icons": "^16.26.0",
