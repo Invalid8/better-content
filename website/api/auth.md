@@ -1,7 +1,6 @@
 # Auth
 
-Firebase is the only provider that ships today. More are being added
-gradually.
+Firebase and Google ship today. More are being added gradually.
 
 That is not a limit on what you can use. Auth reaches the library through one
 small interface, [`AuthAdapter`](/api/core#seam-interfaces), and
@@ -82,3 +81,91 @@ Behavior:
   sign-out and calls `onLogout`.
 
 Peers: `firebase` >= 10, `react` >= 18.
+
+## better-content/auth/google (server)
+
+```ts
+function googleAuth(config: GoogleAuthConfig): AuthAdapter;
+
+interface GoogleAuthConfig {
+  clientId: string | string[];   // OAuth 2.0 Web client ID(s); must match the token's `aud`
+  adminEmails: string[];         // allowlist, compared case-insensitively
+  cookieName?: string;           // default "adminToken"
+  issuers?: string[];            // override for testing
+}
+
+// exported standalone for custom flows and tests
+function verifyGoogleIdToken(token: string, opts: {
+  clientId: string | string[];
+  issuers?: string[];
+  now?: () => number;
+}): Promise<GoogleIdTokenPayload>;
+```
+
+Sign in with Google without a Firebase project or a service account. The
+browser gets a Google ID token, drops it in a cookie, and this adapter
+verifies it locally: RS256 against Google's published JWKS, plus `exp`,
+`iss` and `aud` checks. The JWKS is cached according to Google's own
+`cache-control`.
+
+A request is admin only when the signature verifies **and** `email_verified`
+is true **and** the email is in `adminEmails`. All three, because anyone can
+create a Google account claiming an address; only `email_verified` says Google
+checked it.
+
+Invalid or expired tokens resolve to `null` rather than throwing, so the gate
+turns them into 401 `{ logout: true }` and the client signs out.
+
+No runtime dependency: Node's built-in crypto and `fetch`. Total config is one
+client ID and an allowlist.
+
+## better-content/auth/google/client
+
+```tsx
+<GoogleAuthProvider
+  clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+  adminEmails={["you@example.com"]}   // optional, optimistic client-side isAdmin
+  oneTap                              // optional, show One Tap instead of a button
+>
+  {children}
+</GoogleAuthProvider>
+
+function useGoogleAuth(): {
+  user: GoogleUser | null;
+  isAdmin: boolean;
+  isEditing: boolean;
+  toggleEdit: () => void;
+  logout: () => void;
+  applyCredential: (idToken: string) => void;
+};
+```
+
+Wraps `CmsAuthProvider`, so the edit primitives read `isEditing` from it as
+usual. `adminEmails` here is optimistic UI only; the server adapter is the real
+gate, and a 401 `{ logout: true }` from any admin route forces sign-out.
+
+### Choosing the sign-in UI
+
+You are not tied to Google's button. Three options, and the reason there are
+three is that an ID token can only come from Google's own button or One Tap:
+
+```tsx
+// 1. Google's official button. Every option Google exposes is forwarded:
+//    theme, shape, size, text, width, logo_alignment, type, containerProps…
+<GoogleSignInButton width={320} shape="pill" logo_alignment="center" />
+
+// 2. No button at all.
+<GoogleAuthProvider clientId={id} oneTap>
+
+// 3. Your own UI. Run any flow you like, then hand over the credential.
+const { applyCredential } = useGoogleAuth();
+applyCredential(idToken);
+```
+
+Google renders its button in an iframe it controls, so its own options are the
+full extent of what can be restyled there. If you need markup Google does not
+offer, use option 3: run the auth-code flow yourself, exchange the code for an
+ID token on your server, and call `applyCredential`.
+
+Peer: `@react-oauth/google` >= 0.12 (optional; only needed for this entry
+point).
