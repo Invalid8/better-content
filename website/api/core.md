@@ -76,6 +76,39 @@ interface InMemoryTransport extends Transport {
 }
 ```
 
+A transport only **writes**. Reading is a separate concern: server-rendered
+pages call [`loadItemMap`](/api/server#loaditemmap), and client-only apps call
+`fetchItemMap` below.
+
+## fetchItemMap
+
+```ts
+function fetchItemMap(url: string, options?: {
+  fetch?: typeof globalThis.fetch;   // defaults to the global
+  signal?: AbortSignal;
+  headers?: HeadersInit;
+}): Promise<ItemMap>;
+```
+
+Reads a content snapshot over HTTP, for apps with no server of their own.
+`loadItemMap` needs a `DataAdapter` and so cannot run in a browser; this is its
+client-side counterpart. Point it at a
+[`createContentHandler`](/api/server#createcontenthandler) route and pass the
+result to `createCmsEngine` as `initialItems`.
+
+```ts
+import { createCmsEngine, fetchItemMap, restTransport } from "better-content/core";
+
+const engine = createCmsEngine({
+  transport: restTransport({ apiBasePath: "/api/admin" }),
+  initialItems: await fetchItemMap("/api/content"),
+});
+```
+
+Throws when the response is not ok, and when a 200 body is not a JSON object,
+which is what a misrouted URL serving `index.html` looks like. Without that
+check the engine would start empty and the page would render blank.
+
 ## Content types
 
 ```ts
