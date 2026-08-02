@@ -18,3 +18,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+      # The scaffolder is its own package with no dependencies, so it needs no
+      # install of its own. These tests generate every question combination in
+      # memory and check the generated imports against the generated
+      # package.json; they never touch the network.
+      - run: npm test --prefix create-better-content
