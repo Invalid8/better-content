@@ -5,6 +5,7 @@ import {
   engineStore,
   imageEdit,
   itemStore,
+  markdownEdit,
 } from "../src/svelte/index";
 import { createCmsEngine, inMemoryTransport } from "../src/core";
 import type { Notifier } from "../src/core";
@@ -218,6 +219,76 @@ describe("imageEdit", () => {
 
     expect(store.setExternalUrl("https://a.test/p.png")).toBe(true);
     expect(run.mock.lastCall![0].hasError).toBe(false);
+    stop();
+  });
+});
+
+describe("markdownEdit", () => {
+  it("emits the current state immediately and on every change", () => {
+    const store = markdownEdit({ initialValue: "hello", onSave: () => {} });
+    const run = vi.fn();
+    const stop = store.subscribe(run);
+
+    expect(run).toHaveBeenCalledWith({ value: "hello", charCount: 5 });
+
+    store.setValue("hello world");
+    expect(run).toHaveBeenLastCalledWith({
+      value: "hello world",
+      charCount: 11,
+    });
+
+    stop();
+    store.setValue("ignored");
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
+  it("insert appends until the textarea action attaches an element", () => {
+    const node = document.createElement("textarea");
+    document.body.appendChild(node);
+
+    const store = markdownEdit({
+      initialValue: "hello world",
+      onSave: () => {},
+    });
+
+    store.insert("**", "**", "bold");
+    let seen = "";
+    store.subscribe((state) => {
+      seen = state.value;
+    })();
+    expect(seen).toBe("hello world**bold**");
+
+    store.reset();
+    const { textarea } = store;
+    const action = textarea(node);
+    node.value = "hello world";
+    node.setSelectionRange(0, 5);
+
+    store.insert("_", "_");
+    store.subscribe((state) => {
+      seen = state.value;
+    })();
+    expect(seen).toBe("_hello_ world");
+
+    action.destroy();
+    node.remove();
+  });
+
+  it("reset returns to the initial value and save passes the current one", () => {
+    const onSave = vi.fn();
+    const store = markdownEdit({ initialValue: "start", onSave });
+
+    store.setValue("final");
+    store.save();
+    expect(onSave).toHaveBeenCalledWith("final");
+
+    const run = vi.fn();
+    const stop = store.subscribe(run);
+    store.reset();
+    expect(run).toHaveBeenLastCalledWith({ value: "start", charCount: 5 });
+
+    store.reset("other");
+    expect(run).toHaveBeenLastCalledWith({ value: "other", charCount: 5 });
     stop();
   });
 });

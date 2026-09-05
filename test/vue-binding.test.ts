@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
-import { effectScope } from "vue";
+import { describe, expect, it, vi } from "vitest";
+import { createApp, effectScope, h, nextTick } from "vue";
 import {
   useCmsItem,
   useCmsSnapshot,
   useEditableImage,
+  useMarkdownEditor,
   vContentEdit,
   type ContentEditBinding,
 } from "../src/vue/index";
@@ -168,5 +169,112 @@ describe("useEditableImage", () => {
       isExternal: true,
     });
     scope.stop();
+  });
+});
+
+describe("useMarkdownEditor", () => {
+  it("tracks value and charCount, and stops on scope dispose", () => {
+    const scope = effectScope();
+    const api = scope.run(() =>
+      useMarkdownEditor({ initialValue: "hello", onSave: () => {} }),
+    )!;
+
+    expect(api.value.value).toBe("hello");
+    expect(api.charCount.value).toBe(5);
+
+    api.setValue("hello world");
+    expect(api.value.value).toBe("hello world");
+    expect(api.charCount.value).toBe(11);
+
+    scope.stop();
+    api.setValue("ignored");
+    expect(api.value.value).toBe("hello world");
+  });
+
+  it("insert wraps the selection of the textarea bound to textareaRef", () => {
+    const textarea = document.createElement("textarea");
+    document.body.appendChild(textarea);
+
+    const scope = effectScope();
+    const api = scope.run(() =>
+      useMarkdownEditor({ initialValue: "hello world", onSave: () => {} }),
+    )!;
+
+    api.insert("**", "**", "bold");
+    expect(api.value.value).toBe("hello world**bold**");
+
+    api.reset();
+    textarea.value = "hello world";
+    api.textareaRef.value = textarea;
+    textarea.setSelectionRange(0, 5);
+
+    api.insert("_", "_");
+    expect(api.value.value).toBe("_hello_ world");
+
+    scope.stop();
+    textarea.remove();
+  });
+
+  it("reset returns to the initial value and save passes the current one", () => {
+    const onSave = vi.fn();
+    const scope = effectScope();
+    const api = scope.run(() =>
+      useMarkdownEditor({ initialValue: "start", onSave }),
+    )!;
+
+    api.setValue("final");
+    api.save();
+    expect(onSave).toHaveBeenCalledWith("final");
+
+    api.reset();
+    expect(api.value.value).toBe("start");
+
+    api.reset("other");
+    expect(api.value.value).toBe("other");
+    scope.stop();
+  });
+});
+
+describe("useMarkdownEditor in a mounted component", () => {
+  // The isolated tests above never render, so only this one can show that the
+  // caret restore lands after Vue has written the new value.
+  it("restores the caret after Vue has written the new value", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    let api!: ReturnType<typeof useMarkdownEditor>;
+    const app = createApp({
+      setup() {
+        api = useMarkdownEditor({
+          initialValue: "hello world",
+          onSave: () => {},
+        });
+        return () =>
+          h("textarea", {
+            ref: api.textareaRef,
+            value: api.value.value,
+            onInput: (event: Event) =>
+              api.setValue((event.target as HTMLTextAreaElement).value),
+          });
+      },
+    });
+    app.mount(host);
+
+    const textarea = host.querySelector("textarea")!;
+    expect(textarea.value).toBe("hello world");
+    textarea.setSelectionRange(0, 5);
+
+    api.insert("**", "**");
+    await nextTick();
+    expect(textarea.value).toBe("**hello** world");
+
+    // Writing .value resets the selection to the end, so this caret is only
+    // reachable if the restore ran after Vue's write.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(textarea.selectionStart).toBe("**hello".length);
+    expect(textarea.selectionEnd).toBe("**hello".length);
+
+    app.unmount();
+    host.remove();
   });
 });

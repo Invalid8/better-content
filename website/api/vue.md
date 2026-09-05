@@ -90,3 +90,54 @@ file previews it via an object URL and queues a pending upload that the
 engine flushes on save; `setExternalUrl` validates http(s) URLs and queues
 them without a file. The engine needs a `storage` adapter for file uploads
 to persist.
+
+## useMarkdownEditor
+
+```ts
+interface MarkdownEditorOptions {
+  initialValue: string;
+  onSave: (content: string) => void | Promise<void>;
+}
+
+interface MarkdownEditorApi {
+  value: Readonly<ShallowRef<string>>;
+  charCount: Readonly<ShallowRef<number>>;
+  textareaRef: ShallowRef<HTMLTextAreaElement | null>;
+  setValue(next: string): void;
+  insert(before: string, after?: string, placeholder?: string): void;
+  reset(to?: string): void;                // defaults to the initial value
+  save(): void | Promise<void>;            // passes the current value to onSave
+}
+
+function useMarkdownEditor(options: MarkdownEditorOptions): MarkdownEditorApi;
+```
+
+```vue
+<script setup lang="ts">
+const md = useMarkdownEditor({
+  initialValue: item.body,
+  onSave: (content) => engine.editField("posts", item.id, "body", content),
+});
+const { textareaRef } = md;
+</script>
+
+<template>
+  <button @click="md.insert('**', '**', 'bold')">bold</button>
+  <textarea
+    ref="textareaRef"
+    :value="md.value.value"
+    @input="md.setValue(($event.target as HTMLTextAreaElement).value)"
+  ></textarea>
+  <button @click="md.save()">Save</button>
+</template>
+```
+
+Headless markdown editing with the same semantics as React's
+`useMarkdownEditor`. `insert` wraps the textarea's current selection, or
+inserts `placeholder` when the selection is empty, and leaves the caret at the
+end of the wrapped text so typing continues inside the wrap. Bind
+`textareaRef` to reach the selection; without it `insert` appends at the end
+of the value.
+
+It takes no `CmsEngine`: the draft is local until `save` hands it to your
+callback, so wiring it to `editField` is your line of code.

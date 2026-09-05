@@ -120,8 +120,48 @@ const { src, openFilePicker, handleError } = useEditableImage(engine, {
 Give the engine a `storage` adapter (see [Image storage](/guide/storage)),
 or file uploads have nowhere to go when the save flushes.
 
-## What is intentionally not here
+## Markdown editing
 
-Markdown editing ships as a React hook today; on Vue, drive the engine
-directly or write your own directive using `vContentEdit`'s source as the
-pattern.
+`useMarkdownEditor` is the same headless primitive React ships, with no
+toolbar, no preview, and no parser. It holds a draft string, wraps the
+textarea's current selection on `insert`, and hands the draft to your
+`onSave` callback.
+
+```vue
+<script setup lang="ts">
+import { useMarkdownEditor } from "better-content/vue";
+import { engine } from "@/lib/cms";
+
+const props = defineProps<{ id: string; body: string }>();
+
+const md = useMarkdownEditor({
+  initialValue: props.body,
+  onSave: (content) => engine.editField("posts", props.id, "body", content),
+});
+const { textareaRef } = md;
+</script>
+
+<template>
+  <div class="toolbar">
+    <button type="button" @click="md.insert('**', '**', 'bold')">bold</button>
+    <button type="button" @click="md.insert('[', '](url)', 'link')">link</button>
+  </div>
+  <textarea
+    ref="textareaRef"
+    :value="md.value.value"
+    @input="md.setValue(($event.target as HTMLTextAreaElement).value)"
+  ></textarea>
+  <p>{{ md.charCount.value }} characters</p>
+  <button type="button" @click="md.reset()">Reset</button>
+  <button type="button" @click="md.save()">Save</button>
+</template>
+```
+
+Bind `textareaRef` to the element, or `insert` has no selection to read and
+appends at the end of the value instead. With a selection it wraps the
+selected text; with an empty one it inserts the placeholder, and either way
+the caret lands inside the wrap so you can keep typing.
+
+Unlike the other composables it takes no `CmsEngine`. The draft is local
+until `save` runs, which is what makes committing it through `editField`,
+posting it somewhere else, or discarding it your decision.

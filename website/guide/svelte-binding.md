@@ -133,8 +133,47 @@ external URLs are validated as http(s) and queued without a file.
 Give the engine a `storage` adapter (see [Image storage](/guide/storage)),
 or file uploads have nowhere to go when the save flushes.
 
-## What is intentionally not here
+## Markdown editing
 
-Markdown editing ships as a React hook today; on Svelte, drive the engine
-directly or wrap your own action following `contentEdit` as the pattern. If
-you build one, an issue or PR is welcome.
+`markdownEdit` is the same headless primitive React ships, with no toolbar,
+no preview, and no parser. It holds a draft string, wraps the textarea's
+current selection on `insert`, and hands the draft to your `onSave` callback.
+
+```svelte
+<script lang="ts">
+  import { markdownEdit } from "better-content/svelte";
+  import { engine } from "$lib/cms";
+
+  export let id: string;
+  export let body: string;
+
+  const md = markdownEdit({
+    initialValue: body,
+    onSave: (content) => engine.editField("posts", id, "body", content),
+  });
+  const { textarea } = md;
+</script>
+
+<div class="toolbar">
+  <button type="button" on:click={() => md.insert("**", "**", "bold")}>bold</button>
+  <button type="button" on:click={() => md.insert("[", "](url)", "link")}>link</button>
+</div>
+<textarea
+  use:textarea
+  value={$md.value}
+  on:input={(e) => md.setValue(e.currentTarget.value)}
+></textarea>
+<p>{$md.charCount} characters</p>
+<button type="button" on:click={() => md.reset()}>Reset</button>
+<button type="button" on:click={() => md.save()}>Save</button>
+```
+
+Destructure `textarea` first so `use:textarea` is a plain identifier. Without
+the action attached, `insert` has no selection to read and appends at the end
+of the value instead. With a selection it wraps the selected text; with an
+empty one it inserts the placeholder, and either way the caret lands inside
+the wrap so you can keep typing.
+
+Unlike the stores above it takes no `CmsEngine`. The draft is local until
+`save` runs, which is what makes committing it through `editField`, posting
+it somewhere else, or discarding it your decision.

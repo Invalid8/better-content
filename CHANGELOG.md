@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-09-05
+
+### Added
+
+- **Markdown editing for Vue and Svelte.** `useMarkdownEditor` had shipped
+  only from `better-content/react`, so the three bindings were at parity on
+  inline text and images but not on markdown. They are now.
+
+  - `better-content/vue` gains `useMarkdownEditor({ initialValue, onSave })`,
+    returning `value` and `charCount` as readonly refs, a `textareaRef` to
+    bind to the element, and `setValue` / `insert` / `reset` / `save`.
+  - `better-content/svelte` gains `markdownEdit({ initialValue, onSave })`,
+    a readable store of `{ value, charCount }` carrying the same methods plus
+    a `textarea` action to attach the element with.
+
+  Both are the same headless primitive React ships: no toolbar, no preview,
+  no parser, and no `CmsEngine` argument. The draft stays local until `save`
+  hands it to your callback, so committing it through `editField` is your
+  line of code.
+
+  The behavior now lives in one framework-free place rather than being
+  reimplemented per binding, so `insert` wraps the selection, inserts the
+  placeholder into an empty one, and leaves the caret inside the wrap
+  identically on all three. The React hook was rebuilt on it with **no change
+  to its public API**; its existing tests pass unmodified.
+
+### Changed
+
+- **`useMarkdownEditor`'s `reset()` now returns to the value the editor was
+  created with**, rather than following a later change to the `initialValue`
+  prop. The two disagreed before: `value` was seeded once and never reseeded,
+  while `reset` tracked the prop, so a changed prop made `reset()` jump to a
+  value the editor had never displayed. No test covered it. `reset(explicit)`
+  is unaffected, and the meaning is now the same on all three bindings.
+- `MarkdownEditorApi`'s `setValue`, `insert`, `reset` and `save` now keep a
+  stable identity across renders instead of being rebuilt when `value`
+  changes. Their published type is unchanged; code using them in dependency
+  arrays simply re-runs less. `setValue` remains typed `(next: string) => void`
+  and, as before, is not a React state setter, so the updater-function form is
+  not part of the contract.
+
 ## [0.5.0] - 2026-09-05
 
 ### Changed
@@ -229,6 +270,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.6.0]: https://github.com/Invalid8/better-content/releases/tag/v0.6.0
+[0.5.0]: https://github.com/Invalid8/better-content/releases/tag/v0.5.0
+[0.4.0]: https://github.com/Invalid8/better-content/releases/tag/v0.4.0
 [0.3.1]: https://github.com/Invalid8/better-content/releases/tag/v0.3.1
 [0.3.0]: https://github.com/Invalid8/better-content/releases/tag/v0.3.0
 [0.1.0]: https://github.com/Invalid8/better-content/releases/tag/v0.1.0

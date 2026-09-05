@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useRef, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
+import { createMarkdownEditor } from "../shared/markdown-edit";
 
 export interface UseMarkdownEditorOptions {
   initialValue: string;
@@ -21,48 +28,36 @@ export function useMarkdownEditor({
   initialValue,
   onSave,
 }: UseMarkdownEditorOptions): MarkdownEditorApi {
-  const [value, setValue] = useState(initialValue);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const insert = useCallback(
-    (before: string, after = "", placeholder = "text") => {
-      const textarea = textareaRef.current;
-      const start = textarea?.selectionStart ?? value.length;
-      const end = textarea?.selectionEnd ?? value.length;
-      const selected = value.substring(start, end) || placeholder;
-      const next =
-        value.substring(0, start) +
-        before +
-        selected +
-        after +
-        value.substring(end);
+  // `onSave` is usually an inline arrow, so the controller must call the
+  // latest one or a save would run against stale props.
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
 
-      setValue(next);
-
-      setTimeout(() => {
-        if (!textarea) return;
-        textarea.focus();
-        const caret = start + before.length + selected.length;
-        textarea.setSelectionRange(caret, caret);
-      }, 0);
-    },
-    [value],
+  const [controller] = useState(() =>
+    createMarkdownEditor({
+      initialValue,
+      onSave: (content) => onSaveRef.current(content),
+      getTextarea: () => textareaRef.current,
+    }),
   );
 
-  const reset = useCallback(
-    (to: string = initialValue) => setValue(to),
-    [initialValue],
+  const { value, charCount } = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+    controller.getSnapshot,
   );
-
-  const save = useCallback(() => onSave(value), [onSave, value]);
 
   return {
     value,
-    setValue,
+    charCount,
+    setValue: controller.setValue,
     textareaRef,
-    insert,
-    reset,
-    save,
-    charCount: value.length,
+    insert: controller.insert,
+    reset: controller.reset,
+    save: controller.save,
   };
 }
