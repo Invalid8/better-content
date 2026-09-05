@@ -147,10 +147,13 @@ export class FirestoreDataAdapter implements DataAdapter {
     id: string,
     data: T,
   ): Promise<T & { id: string }> {
+    // `create` rather than `set`: the DataAdapter contract is that this
+    // rejects an id that already exists, and Firestore enforces that
+    // server-side, so no read-then-write race.
     await this.db
       .collection(collection)
       .doc(id)
-      .set({ ...data, createdAt: new Date(), updatedAt: new Date() });
+      .create({ ...data, createdAt: new Date(), updatedAt: new Date() });
     return { id, ...(data as T) };
   }
 

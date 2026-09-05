@@ -97,7 +97,8 @@ queries need them, use a backend with richer queries or split the read.
 
 Firestore Timestamps serialize to ISO strings on the way out, so API
 responses are plain JSON. `create`/`createWithId` stamp `createdAt` and
-`updatedAt`; `update`/`upsert` refresh `updatedAt`. With no query, reads
+`updatedAt`; `update`/`upsert` refresh `updatedAt`. `createWithId` maps to
+Firestore's own `create`, so it rejects an id that already exists. With no query, reads
 default to `createdAt` descending (configurable via `defaultOrderByField`).
 
 Peer: `firebase-admin`.
@@ -126,6 +127,21 @@ Guidelines learned from the shipped two:
 
 - return items as plain JSON with an `id` string,
 - throw on query operators you cannot honor,
-- treat `upsert` as create-or-replace addressed by id; deferred saves depend
-  on it,
 - keep timestamps your concern, not the engine's.
+
+### The write contract
+
+These are not stylistic preferences. Code written against the seam has to
+behave the same on every adapter, so the writes are specified:
+
+| Method | On an id that already exists |
+|---|---|
+| `createWithId` | **reject**; never overwrite |
+| `upsert` | write, merging into the record; keep omitted fields |
+| `update` | patch the given fields |
+| `delete` | succeed even when the id does not exist |
+
+`createWithId` is the only write that refuses an existing record, and
+`upsert` is the one that does not care, so deferred saves rely on `upsert`.
+There is deliberately no single "replace this document" call: do it as
+`delete` then `createWithId`, which behaves the same everywhere.

@@ -59,6 +59,13 @@ Operator mapping: `eq ==`, `ne !=`, `lt <`, `lte <=`, `gt >`, `gte >=`,
 - Firestore Timestamps serialize to ISO strings in results.
 - `create`/`createWithId` stamp `createdAt` and `updatedAt`;
   `update`/`upsert` refresh `updatedAt` (`upsert` merges).
+- `createWithId` uses Firestore's `create`, so it **rejects an id that already
+  exists** rather than overwriting it. Use `upsert` to write regardless, or
+  `delete` then `createWithId` to replace a document.
+- Because reads order by `createdAt` and Firestore omits documents that lack
+  the ordering field, records written only through `upsert` can be missing
+  from an unfiltered read. `createWithId` stamps `createdAt`, so seeding
+  through it (or through `delete` + `createWithId`) avoids this.
 - With no query, reads order by `defaultOrderByField` descending.
 
 Peer: `firebase-admin` >= 12 (uses the modular `firebase-admin/app` and

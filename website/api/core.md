@@ -159,7 +159,22 @@ interface DataAdapter {
   upsert<T>(collection: string, id: string, data: Partial<T>): Promise<void>;
   delete(collection: string, id: string): Promise<void>;
 }
+```
 
+The write contract every adapter must honour, so that swapping backends does
+not change behaviour:
+
+| Method | On an id that already exists |
+|---|---|
+| `createWithId` | **rejects**; it never overwrites |
+| `upsert` | writes, merging into the record; omitted fields are kept |
+| `update` | patches the given fields |
+| `delete` | succeeds even when the id does not exist |
+
+`createWithId` is the only write that refuses to touch an existing record.
+To replace a document wholesale, `delete` then `createWithId`.
+
+```ts
 interface AuthAdapter {
   verifyRequest(req: Request): Promise<AuthIdentity | null>;
 }

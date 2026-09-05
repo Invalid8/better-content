@@ -197,6 +197,9 @@ interface DataAdapter {
 }
 ```
 
+`createWithId` rejects an id that already exists; `upsert` writes either way,
+merging into the record. To replace a document, `delete` then `createWithId`.
+
 Queries use a neutral `Query` type (filters, OR groups, orderBy, limit,
 offset) so no backend's native query language leaks through the seam. An
 adapter that cannot honor an operator **throws** instead of silently
