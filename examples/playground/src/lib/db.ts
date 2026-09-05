@@ -187,6 +187,10 @@ class MapDataAdapter implements DataAdapter {
     id: string,
     data: T,
   ): Promise<T & { id: string }> {
+    // The DataAdapter contract: reject an id that already exists.
+    if (this.table(collection).has(id)) {
+      throw new Error(`${collection}/${id} already exists`);
+    }
     const item = { id, ...(data as Record<string, unknown>) } as T & {
       id: string;
     };

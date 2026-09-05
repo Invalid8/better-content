@@ -2,7 +2,7 @@
 // here reads config from process.env, which every full-stack host supports
 // except SvelteKit, so these files rarely need a host-specific variant.
 
-export const BETTER_CONTENT = "^0.4.0";
+export const BETTER_CONTENT = "^0.5.0";
 
 const FIREBASE_ADMIN = "^14.1.0";
 

@@ -183,6 +183,39 @@ describe("PostgresDataAdapter — writes", () => {
     await adapter.delete("projects", "p1");
     expect(await adapter.fetchById("projects", "p1")).toBeNull();
   });
+
+  it("createWithId rejects an id that already exists", async () => {
+    await expect(
+      adapter.createWithId("projects", "p1", { title: "clobber" }),
+    ).rejects.toThrow();
+
+    // and the existing row is untouched
+    expect(await adapter.fetchById("projects", "p1")).toMatchObject({
+      title: "Old",
+    });
+  });
+
+  it("upsert leaves fields it was not given", async () => {
+    await adapter.upsert("projects", "p1", { title: "Patched" });
+    expect(await adapter.fetchById("projects", "p1")).toMatchObject({
+      title: "Patched",
+      views: 1,
+    });
+  });
+
+  it("delete succeeds for an id that does not exist", async () => {
+    await expect(adapter.delete("projects", "ghost")).resolves.toBeUndefined();
+  });
+
+  it("delete then createWithId is the portable document replace", async () => {
+    await adapter.delete("projects", "p1");
+    await adapter.createWithId("projects", "p1", { title: "Replaced" });
+
+    const row = await adapter.fetchById("projects", "p1");
+    expect(row).toMatchObject({ title: "Replaced" });
+    // the replace really replaced: the old `views` is gone, not merged
+    expect((row as Record<string, unknown>).views).toBeNull();
+  });
 });
 
 describe("PostgresDataAdapter — strictness (no schemaless, no extra)", () => {

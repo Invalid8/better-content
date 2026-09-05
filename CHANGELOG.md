@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-09-05
+
+### Changed
+
+- **`DataAdapter.createWithId` now rejects an id that already exists, on every
+  adapter.** It previously meant two different things: the Firestore adapter
+  overwrote the existing document, while the Postgres adapter threw a unique
+  violation. The same call, against the same seam, did opposite things
+  depending on the backend, which is exactly what the adapter seam exists to
+  prevent. Neither behavior was pinned by a test.
+
+  Firestore now issues `create` instead of `set`, so the rejection is enforced
+  by Firestore itself with no read-then-write race. Postgres is unchanged.
+
+  **This is a behavior change.** Code that relied on Firestore's
+  `createWithId` silently overwriting will now see it reject. Use `upsert` to
+  write regardless of what is there, or `delete` then `createWithId` to
+  replace a document wholesale.
+
+  The write contract is now stated on the `DataAdapter` type, in the adapter
+  guide, and pinned by tests on both shipped adapters:
+
+  | Method | On an id that already exists |
+  |---|---|
+  | `createWithId` | rejects; never overwrites |
+  | `upsert` | writes, merging; omitted fields are kept |
+  | `update` | patches the given fields |
+  | `delete` | succeeds even when the id does not exist |
+
+### Docs
+
+- The adapter guide previously told adapter authors to "treat `upsert` as
+  create-or-replace". Both shipped adapters merge rather than replace, so the
+  guidance contradicted the implementations it was describing. Corrected, and
+  the write contract added alongside it.
+- Documented a Firestore-specific trap: reads order by `createdAt` by default
+  and Firestore omits documents that lack the ordering field, so records
+  written only through `upsert`, which does not stamp `createdAt`, can be
+  missing from an unfiltered read.
+
 ## [0.4.0] - 2026-08-02
 
 ### Added

@@ -33,6 +33,9 @@ export const adapter: DataAdapter = {
     return item;
   },
   async createWithId(collection, id, fields) {
+    // The contract: createWithId rejects an id that already exists.
+    // upsert is the write that does not care.
+    if (table(collection).has(id)) throw new Error(`${id} already exists`);
     const item = { id, ...fields };
     table(collection).set(id, item);
     return item;

@@ -163,7 +163,10 @@ on the rest (`contains`, OR groups) rather than silently misleading.
 
 Bring your own backend by implementing `DataAdapter` — 7 methods
 (`fetchById`, `fetchCollection`, `create`, `createWithId`, `update`, `upsert`,
-`delete`) against a neutral `Query`.
+`delete`) against a neutral `Query`. The writes are specified so behavior does
+not change with the backend: `createWithId` **rejects** an id that already
+exists, `upsert` writes either way and merges, and `delete` succeeds on a
+missing id. Replace a document with `delete` then `createWithId`.
 
 ## Auth
 
