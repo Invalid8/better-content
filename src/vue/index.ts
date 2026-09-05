@@ -6,6 +6,7 @@ import {
   selectImageFile,
   setExternalImageUrl,
 } from "../shared/image-edit";
+import { createMarkdownEditor } from "../shared/markdown-edit";
 
 export function useCmsSnapshot(
   engine: CmsEngine,
@@ -201,3 +202,49 @@ export const vContentEdit = {
     delete el[STATE];
   },
 };
+
+export interface MarkdownEditorOptions {
+  initialValue: string;
+  onSave: (content: string) => void | Promise<void>;
+}
+
+export interface MarkdownEditorApi {
+  value: Readonly<ShallowRef<string>>;
+  charCount: Readonly<ShallowRef<number>>;
+  textareaRef: ShallowRef<HTMLTextAreaElement | null>;
+  setValue(next: string): void;
+  insert(before: string, after?: string, placeholder?: string): void;
+  reset(to?: string): void;
+  save(): void | Promise<void>;
+}
+
+export function useMarkdownEditor(
+  options: MarkdownEditorOptions,
+): MarkdownEditorApi {
+  const textareaRef = shallowRef<HTMLTextAreaElement | null>(null);
+  const controller = createMarkdownEditor({
+    ...options,
+    getTextarea: () => textareaRef.value,
+  });
+
+  const initial = controller.getSnapshot();
+  const value = shallowRef(initial.value);
+  const charCount = shallowRef(initial.charCount);
+
+  const stop = controller.subscribe(() => {
+    const next = controller.getSnapshot();
+    value.value = next.value;
+    charCount.value = next.charCount;
+  });
+  onScopeDispose(stop);
+
+  return {
+    value,
+    charCount,
+    textareaRef,
+    setValue: controller.setValue,
+    insert: controller.insert,
+    reset: controller.reset,
+    save: controller.save,
+  };
+}

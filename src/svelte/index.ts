@@ -5,6 +5,10 @@ import {
   selectImageFile,
   setExternalImageUrl,
 } from "../shared/image-edit";
+import {
+  createMarkdownEditor,
+  type MarkdownEditorState,
+} from "../shared/markdown-edit";
 
 type Subscriber<T> = (value: T) => void;
 type Unsubscriber = () => void;
@@ -208,5 +212,51 @@ export function contentEdit(
       node.removeEventListener("focus", onFocus);
       node.removeEventListener("blur", onBlur);
     },
+  };
+}
+
+export type MarkdownEditState = MarkdownEditorState;
+
+export interface MarkdownEditOptions {
+  initialValue: string;
+  onSave: (content: string) => void | Promise<void>;
+}
+
+export interface MarkdownEditAction {
+  destroy(): void;
+}
+
+export interface MarkdownEditStore extends Readable<MarkdownEditState> {
+  textarea(node: HTMLTextAreaElement): MarkdownEditAction;
+  setValue(next: string): void;
+  insert(before: string, after?: string, placeholder?: string): void;
+  reset(to?: string): void;
+  save(): void | Promise<void>;
+}
+
+export function markdownEdit(options: MarkdownEditOptions): MarkdownEditStore {
+  let element: HTMLTextAreaElement | null = null;
+  const controller = createMarkdownEditor({
+    ...options,
+    getTextarea: () => element,
+  });
+
+  return {
+    subscribe(run) {
+      run(controller.getSnapshot());
+      return controller.subscribe(() => run(controller.getSnapshot()));
+    },
+    textarea(node) {
+      element = node;
+      return {
+        destroy() {
+          if (element === node) element = null;
+        },
+      };
+    },
+    setValue: controller.setValue,
+    insert: controller.insert,
+    reset: controller.reset,
+    save: controller.save,
   };
 }

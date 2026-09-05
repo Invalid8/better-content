@@ -138,6 +138,13 @@ const md = useMarkdownEditor({ initialValue, onSave });
 and restores focus and caret. `reset`, `save`, and `charCount` round it out.
 No modal, no toolbar, no preview renderer shipped.
 
+`reset()` returns to the value the editor was created with; a later change to
+the `initialValue` prop does not move that target.
+
+The same primitive ships on the other two bindings as
+[`useMarkdownEditor`](/guide/vue-binding#markdown-editing) for Vue and
+[`markdownEdit`](/guide/svelte-binding#markdown-editing) for Svelte.
+
 ## Auth context
 
 The primitives read a minimal auth state through `useCmsAuth`:

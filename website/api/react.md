@@ -93,11 +93,23 @@ interface MarkdownEditorApi {
   setValue(next: string): void;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   insert(before: string, after?: string, placeholder?: string): void;
-  reset(to?: string): void;
-  save(): void | Promise<void>;
+  reset(to?: string): void;                // defaults to the initial value
+  save(): void | Promise<void>;            // passes the current value to onSave
   charCount: number;
 }
 ```
+
+`insert` wraps the textarea's current selection, or inserts `placeholder` when
+the selection is empty, and leaves the caret at the end of the wrapped text so
+typing continues inside the wrap. Without `textareaRef` attached it appends at
+the end of the value.
+
+`reset()` returns to the value the editor was created with. A later change to
+the `initialValue` prop does not move that target, and does not reseed `value`
+either.
+
+The Vue and Svelte bindings ship the same primitive as `useMarkdownEditor` and
+`markdownEdit`.
 
 ## Auth context
 
