@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import process, { stdin, stdout } from "node:process";
 import * as readline from "node:readline";
 
@@ -304,7 +304,7 @@ async function main() {
   }
 
   answers.tailwind = answers.tailwind === "yes";
-  const name = directory.split("/").filter(Boolean).pop() ?? "my-content-site";
+  const name = basename(target);
   const settings = { ...answers, name };
   const host = hostFor(answers.host);
 
@@ -312,7 +312,19 @@ async function main() {
   // on top, so you get whatever options it offers rather than my copy of them.
   if (host.scaffold) {
     stdout.write(`${c.dim(`Running the ${host.meta.label} scaffolder…`)}\n\n`);
-    await host.scaffold(directory, settings);
+    // Delegated CLIs are run from the target's parent and handed just the
+    // directory name. create-vite resolves an absolute path as if it were
+    // relative, so passing one through would scaffold their half under the
+    // current directory while our half landed at the real path. Our own writes
+    // use the absolute `target` and are unaffected by the chdir.
+    await mkdir(dirname(target), { recursive: true });
+    const cwd = process.cwd();
+    process.chdir(dirname(target));
+    try {
+      await host.scaffold(name, settings);
+    } finally {
+      process.chdir(cwd);
+    }
     stdout.write("\n");
   }
 
