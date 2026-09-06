@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1] - 2026-09-06
+
+### Fixed
+
+- **`ContentEditSpan` left the raw draft on screen next to the rendered value
+  after an edit.** With a `renderValue` that turns the stored string into
+  markup, blurring the field showed the source text and the rendered output
+  one after the other, and every further edit round-tripped through the
+  doubled text.
+
+  While the field is focused its text is written imperatively, so React holds
+  no record of those nodes. On blur it rendered the value and **appended**
+  alongside them. The element is now cleared before React renders into it.
+
+  Only reachable with a `renderValue`; the default identity renderer showed
+  the same duplication but of identical text, so it read as a stutter rather
+  than as markup. Reproduced and fixed under a real browser, not only jsdom.
+
 ## [0.8.0] - 2026-09-06
 
 ### Added
@@ -381,6 +399,7 @@ protecting them.
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.8.1]: https://github.com/Invalid8/better-content/releases/tag/v0.8.1
 [0.8.0]: https://github.com/Invalid8/better-content/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Invalid8/better-content/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Invalid8/better-content/releases/tag/v0.6.0
