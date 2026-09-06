@@ -109,3 +109,78 @@ describe("ContentEditSpan", () => {
     expect(heading.textContent).toBe("a\nb");
   });
 });
+
+describe("ContentEditSpan with renderValue", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  // The portfolio renders its own markup from the stored string, so on blur
+  // the element goes from user-owned plain text back to React-owned nodes.
+  const renderMarkup = (raw: string) => (
+    <>
+      {raw.split("**").map((part, i) =>
+        i % 2 ? <strong key={i}>{part}</strong> : part,
+      )}
+    </>
+  );
+
+  const renderEditable = (initial: string) =>
+    render(
+      <CmsAuthProvider
+        value={{ isAdmin: false, isEditing: true, toggleEdit: vi.fn() }}
+      >
+        <PageProvider
+          transport={inMemoryTransport()}
+          initialItems={{ sections: [{ id: "hero", heading: initial }] }}
+        >
+          <ContentEditSpan
+            as="h1"
+            collection="sections"
+            itemId="hero"
+            fieldKey="heading"
+            renderValue={renderMarkup}
+          />
+        </PageProvider>
+      </CmsAuthProvider>,
+    );
+
+  it("does not leave the raw draft behind next to the rendered value", async () => {
+    renderEditable("A **bold** claim");
+    const heading = screen.getByRole("heading");
+
+    // Rendered before editing: the ** markers are consumed by renderValue.
+    expect(heading.textContent).toBe("A bold claim");
+
+    fireEvent.focus(heading);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    // Focused: the raw string is handed to the user to edit.
+    expect(heading.textContent).toBe("A **bold** claim");
+
+    heading.textContent = "A **bolder** claim";
+    fireEvent.input(heading);
+    fireEvent.blur(heading);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    // On blur React re-renders the value. The raw text the user was editing
+    // must be gone, not sitting in front of the rendered nodes.
+    expect(heading.textContent).toBe("A bolder claim");
+    expect(heading.querySelectorAll("strong")).toHaveLength(1);
+  });
+
+  it("survives a second focus and blur", async () => {
+    renderEditable("A **bold** claim");
+    const heading = screen.getByRole("heading");
+
+    for (const next of ["A **first** claim", "A **second** claim"]) {
+      fireEvent.focus(heading);
+      await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+      heading.textContent = next;
+      fireEvent.input(heading);
+      fireEvent.blur(heading);
+      await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    }
+
+    expect(heading.textContent).toBe("A second claim");
+  });
+});

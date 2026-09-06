@@ -130,10 +130,16 @@ function EditableContentSpan({
   }, []);
 
   const handleBlur = useCallback(() => {
-    const next = contentRef.current
-      ? readText(contentRef.current)
-      : draftRef.current;
+    const el = contentRef.current;
+    const next = el ? readText(el) : draftRef.current;
     draftRef.current = next;
+
+    // While focused the element's text is written imperatively, so React has
+    // no record of those nodes. Re-rendering the value would append alongside
+    // them and show the raw draft next to the rendered output. Clear first, so
+    // React renders into an empty element.
+    if (el) el.textContent = "";
+
     setEditValue(next);
     setIsFocused(false);
     if (next !== raw) {
