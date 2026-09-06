@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-09-06
+
+### Changed
+
+- **Both adapters now read back the same shape.** The seam exists so behaviour
+  does not change when the backend does, and on reads it was not holding. Two
+  divergences, in opposite directions:
+
+  - The **Postgres adapter added a `collection` field** to every record it
+    read. Firestore never did, `Item` does not declare it, and `toRow` already
+    stripped it on the way in, so it was synthesized on read rather than
+    stored. It is no longer added.
+  - The **Postgres adapter stripped `createdAt` and `updatedAt`**, which
+    Firestore returned. They are real stored columns written by the adapter
+    itself, so they are no longer hidden.
+
+  The rule both follow: a read returns the record's stored fields plus `id`,
+  and an adapter neither invents fields nor hides them.
+
+  **This is a behavior change.** Postgres consumers reading `item.collection`
+  will find it gone, and will now see `createdAt`/`updatedAt` they did not see
+  before.
+
+- **Postgres timestamps read back as ISO strings**, matching Firestore, rather
+  than as `Date` objects. Matching field names is not parity if one backend
+  yields a `Date` and the other a string, and these records are JSON-serialized
+  across `createContentHandler` and server-rendered payloads, where a `Date`
+  becomes a string in transit regardless.
+
+  Writes accept either form, so an adapter still takes back the record it just
+  returned. Without that, reading from one environment and seeding another
+  would fail on a Postgres target.
+
+- **`seedItemMap` now also strips `createdAt` and `updatedAt`** alongside `id`
+  and `collection`. All four address the record or belong to the adapter
+  rather than being content, and a snapshot read from a backend carries all
+  four. Passing the timestamps through would also have broken this function's
+  documented promise that `createdAt` is reset: Firestore's `createWithId`
+  overrides whatever it is handed, while Postgres would have inserted it
+  verbatim — divergence again, one layer up.
+
+### Added
+
+- A cross-adapter parity suite (`test/adapter-parity.test.ts`) running the real
+  Postgres adapter against PGlite and the Firestore adapter against a stub,
+  pinning that the two agree on field names, on how a timestamp is
+  represented, and that each accepts back what it returned. Write contracts
+  were already pinned per adapter; read shapes were not, which is how both
+  divergences survived.
+
 ## [0.8.1] - 2026-09-06
 
 ### Fixed
@@ -399,6 +449,7 @@ protecting them.
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.9.0]: https://github.com/Invalid8/better-content/releases/tag/v0.9.0
 [0.8.1]: https://github.com/Invalid8/better-content/releases/tag/v0.8.1
 [0.8.0]: https://github.com/Invalid8/better-content/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Invalid8/better-content/releases/tag/v0.7.0

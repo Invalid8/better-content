@@ -34,6 +34,24 @@ export interface PostgresAdapterConfig {
   schema: Record<string, PgTable>;
 }
 
+// Drizzle hands back `Date` for a timestamp column; the Firestore adapter
+// serializes its timestamps to ISO strings. Matching field names is not parity
+// if one backend yields a Date and the other a string, and these records are
+// JSON-serialized across the content route and SSR payloads anyway, where a
+// Date becomes a string in transit regardless.
+function serializeRow<T>(value: T): T {
+  if (value instanceof Date) return value.toISOString() as unknown as T;
+  if (Array.isArray(value)) return value.map(serializeRow) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, inner] of Object.entries(value)) {
+      out[key] = serializeRow(inner);
+    }
+    return out as T;
+  }
+  return value;
+}
+
 export class PostgresDataAdapter implements DataAdapter {
   private db: DrizzleDb | undefined;
   private readonly pool: Pool | undefined;
@@ -98,20 +116,27 @@ export class PostgresDataAdapter implements DataAdapter {
     if (id !== undefined) row.id = id;
     for (const [key, value] of Object.entries(data)) {
       if (key === "id" || key === "collection") continue;
-      this.col(table, key);
-      row[key] = value;
+      const column = this.col(table, key);
+      // Reads emit timestamps as ISO strings, so writes have to accept them:
+      // an adapter that cannot be handed back what it just returned is not
+      // round-trippable, and copying one environment into another does exactly
+      // that. Drizzle's timestamp column calls toISOString() on whatever it
+      // gets, so a string would throw.
+      row[key] =
+        column.columnType === "PgTimestamp" && typeof value === "string"
+          ? new Date(value)
+          : value;
     }
     return row;
   }
 
-  private fromRow(
-    collection: string,
-    row: Record<string, unknown>,
-  ): Record<string, unknown> {
-    const { createdAt, updatedAt, ...rest } = row;
-    void createdAt;
-    void updatedAt;
-    return { collection, ...rest };
+  // A read returns the record's stored fields plus `id`. It neither invents
+  // nor hides: `collection` is the record's address rather than a field and is
+  // not added back, and `createdAt`/`updatedAt` are real columns and are no
+  // longer stripped. Both used to make the read shape depend on the backend,
+  // which is the thing the seam exists to prevent.
+  private fromRow(row: Record<string, unknown>): Record<string, unknown> {
+    return serializeRow({ ...row });
   }
 
   private renderFilter(table: PgTable, f: QueryFilter): SQL | undefined {
@@ -177,7 +202,7 @@ export class PostgresDataAdapter implements DataAdapter {
       .where(eq(this.col(table, "id"), id))
       .limit(1);
     return rows[0]
-      ? (this.fromRow(collection, rows[0]) as unknown as T & { id: string })
+      ? (this.fromRow(rows[0]) as unknown as T & { id: string })
       : null;
   }
 
@@ -200,7 +225,7 @@ export class PostgresDataAdapter implements DataAdapter {
 
     const rows = await query;
     return rows.map(
-      (r) => this.fromRow(collection, r) as unknown as T & { id: string },
+      (r) => this.fromRow(r) as unknown as T & { id: string },
     );
   }
 

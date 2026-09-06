@@ -105,14 +105,22 @@ export async function seedItemMap(
     }
 
     for (const item of items) {
-      // `id` and `collection` address the record, they are not fields of it.
-      // The adapters disagree here: the Postgres adapter strips both on write
-      // but adds `collection` back on read, while Firestore does neither. So
-      // copying a Postgres-sourced ItemMap into Firestore would otherwise
-      // store `collection` as a real field. Stripping makes the seed write the
-      // same document whichever backend it was read from.
-      const { id, collection: _address, ...fields } = item;
-      void _address;
+      // `id` and `collection` address the record; `createdAt` and `updatedAt`
+      // belong to the adapter. None of them are the record's own fields, and a
+      // snapshot read back from a backend carries all four. Passing the
+      // timestamps through would also break this function's promise that
+      // `createdAt` is reset: Firestore's `createWithId` overrides whatever it
+      // is handed, while Postgres would insert it verbatim.
+      const {
+        id,
+        collection: _collection,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        ...fields
+      } = item;
+      void _collection;
+      void _createdAt;
+      void _updatedAt;
 
       try {
         await data.delete(collection, id);
