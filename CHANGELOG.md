@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-09-06
+
+### Added
+
+- **`seedItemMap(data, collections, options?)` in `better-content/server`.**
+  The mirror of `loadItemMap`: it writes an `ItemMap` into a backend through
+  the `DataAdapter` seam, borrowing that function's vocabulary rather than
+  inventing new words.
+
+  ```ts
+  await seedItemMap(data, {
+    portfolio: sections,                          // byId, the default
+    projects: { items: projects, mode: "replace" },
+  });
+  ```
+
+  - **`"byId"`** replaces the named records and leaves everything else in the
+    collection alone.
+  - **`"replace"`** makes the seeded array the collection: records present in
+    the backend but absent from the seed are deleted.
+
+  The mode is per collection because a real seed needs both in one run —
+  singletons written by id, lists replaced wholesale. A bare `Item[]` is
+  accepted, so an `ItemMap` is already a valid argument and
+  `seedItemMap(target, await loadItemMap(source, …))` copies an environment.
+
+  Each record is written as **`delete` then `createWithId`**. Neither verb
+  expresses a portable replace on its own: `createWithId` rejects an existing
+  id, and `upsert` merges rather than replaces and does not stamp `createdAt`,
+  which on Firestore leaves the record invisible to a default read that orders
+  by that field. Routing every write through `createWithId` is what avoids it,
+  and that is the knowledge this helper exists to hold rather than have every
+  consumer re-derive.
+
+  Stated rather than left to be discovered: two round trips per record;
+  `createdAt` is reset for a record that already existed; and the write is not
+  atomic, because the seam has no batch or transaction. Writes run
+  sequentially in a deterministic order and the first failure throws, naming
+  the collection, the id and how many writes had landed — and saying so
+  explicitly when the record was deleted before the write failed, since it is
+  then gone rather than merely unwritten.
+
+  There is deliberately **no `"merge"` mode**, and ordering is untouched with
+  no `order` field invented. Both are argued in the docs.
+
+### Fixed
+
+- `seedItemMap` treats `id` **and `collection`** as a record's address rather
+  than its fields, so neither is written into the document. This matters
+  across backends: the Postgres adapter adds a `collection` field to every row
+  it reads and the Firestore adapter does not, so copying a Postgres-sourced
+  `ItemMap` into Firestore would otherwise have stored `collection` as a real
+  field in every document.
+
+  The underlying divergence between the two adapters' read shapes is **not**
+  changed here.
+
 ## [0.7.0] - 2026-09-06
 
 ### Added
@@ -324,6 +381,7 @@ protecting them.
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.8.0]: https://github.com/Invalid8/better-content/releases/tag/v0.8.0
 [0.7.0]: https://github.com/Invalid8/better-content/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Invalid8/better-content/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Invalid8/better-content/releases/tag/v0.5.0

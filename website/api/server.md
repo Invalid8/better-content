@@ -84,6 +84,69 @@ hydrates from.
 - `fallback` applies only when the fetch **throws** (an empty result is a
   valid result). Without a fallback the error propagates.
 
+## seedItemMap
+
+```ts
+function seedItemMap(
+  data: DataAdapter,
+  collections: ItemMapSeedConfig,
+  options?: { mode?: SeedMode },     // default "byId"
+): Promise<void>;
+
+type SeedMode = "byId" | "replace";
+type ItemMapSeedConfig = Record<string, Item[] | { items: Item[]; mode?: SeedMode }>;
+```
+
+Writes an `ItemMap` into a backend. The mirror of `loadItemMap`, and it
+borrows that function's vocabulary rather than inventing new words.
+
+```ts
+await seedItemMap(data, {
+  portfolio: sections,                        // byId, the default
+  projects: { items: projects, mode: "replace" },
+});
+```
+
+- **`"byId"`** replaces the named records and leaves everything else in the
+  collection alone.
+- **`"replace"`** makes the seeded array the collection: records in the
+  backend but absent from the seed are deleted.
+
+The mode is per collection because a real seed needs both in one run:
+singletons written by id, lists replaced wholesale. `options.mode` sets the
+default for collections that do not name their own.
+
+A bare `Item[]` is accepted, so an `ItemMap` is already a valid argument and
+`seedItemMap(target, await loadItemMap(source, …))` copies an environment.
+
+Each record is written as **`delete` then `createWithId`**. Neither verb
+expresses a portable replace alone: `createWithId` rejects an existing id, and
+`upsert` merges rather than replaces and does not stamp `createdAt` — which on
+Firestore means the record is invisible to a default read that orders by it.
+Routing every write through `createWithId` is what avoids that.
+
+What that costs, stated rather than discovered:
+
+- **Two round trips per record.** Seeding is an offline one-shot.
+- **`createdAt` is reset** for a record that already existed. Correct for a
+  replace, and it makes default read order reflect the seed run.
+- **Not atomic.** The seam has no batch or transaction, so a record can be
+  deleted and not yet rewritten. Writes run sequentially in a deterministic
+  order and the first failure throws, naming the collection, the id and how
+  many writes had landed — and saying so explicitly when the record was
+  deleted before the write failed.
+
+`id` and `collection` are treated as the record's address, not its fields, and
+are not written into the document.
+
+There is deliberately **no `"merge"` mode**. Merging new fields into existing
+content is a migration concern, and it is the one shape that carries the
+`createdAt` trap above. Call `data.upsert` directly if you want it.
+
+Ordering is not touched and no `order` field is invented: both adapters stamp
+millisecond timestamps, so a fast loop ties and read order becomes arbitrary.
+Put an explicit `order` field in the items and sort on it.
+
 ## createContentHandler
 
 ```ts
