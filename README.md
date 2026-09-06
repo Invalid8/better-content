@@ -142,7 +142,7 @@ It is a framework-free custom element underneath
 | `better-content/vue` | `useCmsSnapshot`, `useCmsItem`, `vContentEdit` directive, `useEditableImage`, `useMarkdownEditor` | client |
 | `better-content/devtools` | `<better-content-inspector>` custom element: live database view for development | client |
 | `better-content/devtools/react` | typed `DataInspector` React wrapper for the element | client |
-| `better-content/server` | `createCmsHandlers`, `createAdminGate`, `loadItemMap`, `resolveRelations` | server |
+| `better-content/server` | `createCmsHandlers`, `createContentHandler`, `createAdminGate`, `loadItemMap`, `seedItemMap`, `resolveRelations` | server |
 | `better-content/adapters/postgres` | Drizzle-backed, typed-only adapter | server |
 | `better-content/adapters/firestore` | Firestore adapter (throws on unsupported ops) | server |
 | `better-content/storage/cloudinary` | client upload half (pure fetch) | client |

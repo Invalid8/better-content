@@ -17,6 +17,13 @@ export {
   type ItemCollectionLoadConfig,
   type ItemMapLoadConfig,
 } from "./loadItemMap";
+export {
+  seedItemMap,
+  type ItemCollectionSeedConfig,
+  type ItemMapSeedConfig,
+  type SeedItemMapOptions,
+  type SeedMode,
+} from "./seedItemMap";
 
 export type {
   AuthAdapter,
