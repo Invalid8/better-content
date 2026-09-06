@@ -26,17 +26,17 @@ export function engineStore(engine: CmsEngine): Readable<CmsSnapshot> {
   };
 }
 
-export function itemStore(
+export function itemStore<T = Record<string, unknown>>(
   engine: CmsEngine,
   collection: string,
   id: string,
-): Readable<Item | undefined> {
+): Readable<Item<T> | undefined> {
   return {
     subscribe(run) {
-      let current = engine.getItem(collection, id);
+      let current = engine.getItem<T>(collection, id);
       run(current);
       return engine.subscribe(() => {
-        const next = engine.getItem(collection, id);
+        const next = engine.getItem<T>(collection, id);
         if (!Object.is(next, current)) {
           current = next;
           run(next);

@@ -10,11 +10,11 @@ package** and works with Svelte 4 and 5.
 function engineStore(engine: CmsEngine): Readable<CmsSnapshot>;
 // whole-engine store; emits on every engine change
 
-function itemStore(
+function itemStore<T = Record<string, unknown>>(
   engine: CmsEngine,
   collection: string,
   id: string,
-): Readable<Item | undefined>;
+): Readable<Item<T> | undefined>;
 // fine-grained: emits only when this item's reference changes
 ```
 

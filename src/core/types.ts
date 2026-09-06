@@ -5,7 +5,13 @@ export interface EntityAddress {
 
 export type Editable<T = Record<string, unknown>> = T & EntityAddress;
 
-export type Item = Record<string, unknown> & { id: string };
+/**
+ * A content record: the caller's shape plus the `id` every record carries.
+ *
+ * `Item` on its own is `Record<string, unknown> & { id: string }`, unchanged.
+ * Supply `T` to read fields at their real types: `Item<Project>`.
+ */
+export type Item<T = Record<string, unknown>> = T & { id: string };
 
 export type ItemMap = Record<string, Item[]>;
 
@@ -61,16 +67,16 @@ export interface DataAdapter {
   fetchCollection<T = Record<string, unknown>>(
     collection: string,
     q?: Query,
-  ): Promise<(T & { id: string })[]>;
+  ): Promise<Item<T>[]>;
   fetchById<T = Record<string, unknown>>(
     collection: string,
     id: string,
-  ): Promise<(T & { id: string }) | null>;
+  ): Promise<Item<T> | null>;
   /** Creates a record under a generated id. */
   create<T = Record<string, unknown>>(
     collection: string,
     data: T,
-  ): Promise<T & { id: string }>;
+  ): Promise<Item<T>>;
   /**
    * Creates a record under the given id.
    *
@@ -83,7 +89,7 @@ export interface DataAdapter {
     collection: string,
     id: string,
     data: T,
-  ): Promise<T & { id: string }>;
+  ): Promise<Item<T>>;
   /** Applies a partial change to an existing record. */
   update<T = Record<string, unknown>>(
     collection: string,

@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-09-06
+
+### Added
+
+- **`Item` takes an optional type argument: `Item<T> = T & { id: string }`.**
+  `Item` on its own is unchanged, so nothing breaks. Supply `T` to read your
+  content at its real types instead of `unknown`:
+
+  ```ts
+  const banner = engine.getItem<Banner>("portfolio", "banner");
+  banner?.skills;   // Skill[] | undefined, previously unknown
+  ```
+
+  This is not a new concept so much as a name for one: `DataAdapter` has
+  returned `T & { id: string }` from `fetchCollection`, `fetchById`, `create`
+  and `createWithId` since v1. Those four are now stated as `Item<T>`, which
+  is the same type spelled once instead of twice.
+
+  The parameter is on the **addressed read** in every binding: `getItem<T>` in
+  core, `useCmsItem<T>` in React and Vue, `itemStore<T>` in Svelte.
+
+- **`createItem<T>` and `updateItem<T>` type the write path.**
+
+  ```ts
+  await engine.createItem<Project>("projects", { title: "Portfolio", order: 0 });
+  await engine.updateItem<Project>("projects", id, { order: 3 });
+  ```
+
+  Read and write are not the same promise, and the docs say so. On a read `T`
+  is an **assertion**: nothing verifies the stored record matches, exactly as
+  `fetchCollection<T>` has never verified it. On a write `T` is **checked**,
+  because you hand over the object and TypeScript compares it to the shape.
+
+  The constraint is `T extends object`, deliberately not
+  `T extends Record<string, unknown>`: an `interface` has no implicit index
+  signature and would have been rejected. This also **fixes an existing
+  papercut** — `createItem`'s old `Record<string, unknown>` parameter rejected
+  interface-typed objects outright, so passing your own `interface Project`
+  required a cast or a type-alias workaround. It no longer does.
+
+  `editField` stays `unknown`. A single field value cannot be typed without a
+  collection-keyed content schema, which is deliberately not shipped.
+
+### Notes
+
+`ItemMap` is deliberately **not** generic. Measured against the real consumer
+that motivated this release: deleting its entire compatibility shim left six
+type errors, and every one was a `getItem` read. None came from reading
+`items`, because list reads there narrow with a runtime type guard, which
+checks for real. A collection-keyed schema would have returned a union for a
+collection of mixed singletons, so it would not have fixed the case that
+prompted this, while encouraging consumers to drop the guard that was
+protecting them.
+
 ## [0.6.0] - 2026-09-05
 
 ### Added
@@ -270,6 +324,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.7.0]: https://github.com/Invalid8/better-content/releases/tag/v0.7.0
 [0.6.0]: https://github.com/Invalid8/better-content/releases/tag/v0.6.0
 [0.5.0]: https://github.com/Invalid8/better-content/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Invalid8/better-content/releases/tag/v0.4.0

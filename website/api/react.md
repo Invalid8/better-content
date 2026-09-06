@@ -29,7 +29,7 @@ function usePageContext(): PageContextValue;
 function useCmsEngine(): CmsEngine;
 // the stable engine; never re-renders by itself
 
-function useCmsItem(collection: string, id: string): Item | undefined;
+function useCmsItem<T = Record<string, unknown>>(collection: string, id: string): Item<T> | undefined;
 // fine-grained: re-renders only when this item's reference changes
 ```
 

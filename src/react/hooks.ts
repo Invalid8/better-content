@@ -12,10 +12,13 @@ export function useCmsEngine(): CmsEngine {
   return engine;
 }
 
-export function useCmsItem(collection: string, id: string): Item | undefined {
+export function useCmsItem<T = Record<string, unknown>>(
+  collection: string,
+  id: string,
+): Item<T> | undefined {
   const engine = useCmsEngine();
   const getItem = useCallback(
-    () => engine.getItem(collection, id),
+    () => engine.getItem<T>(collection, id),
     [engine, collection, id],
   );
   return useSyncExternalStore(engine.subscribe, getItem, getItem);
