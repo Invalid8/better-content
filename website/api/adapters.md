@@ -1,5 +1,30 @@
 # Adapters
 
+## The read shape both adapters share
+
+A read returns the record's **stored fields plus `id`**. An adapter neither
+invents fields nor hides them, so the same record reads back the same way
+whichever backend holds it:
+
+```ts
+{ id: "hero", title: "Hello", createdAt: "2026-09-06T…", updatedAt: "…" }
+```
+
+- **`id`** is the record's address, and so is the collection name. Neither is
+  a field, and `collection` is not returned.
+- **`createdAt` / `updatedAt`** are the adapter's own, written on every create
+  and update, and both adapters return them.
+- **Timestamps are ISO strings**, not `Date` objects, on both backends. These
+  records are JSON-serialized across `createContentHandler` and server-rendered
+  payloads, where a `Date` becomes a string anyway.
+- An adapter **accepts back what it returned**: handing a record you just read
+  to `createWithId` or `upsert` works, which is what makes copying one
+  environment into another possible.
+
+`seedItemMap` strips all four before writing, since they address the record or
+belong to the adapter rather than being content.
+
+
 ## better-content/adapters/postgres
 
 ```ts
@@ -25,6 +50,8 @@ migrations (Drizzle Kit); the adapter performs DML only.
 - Default ordering: `createdAt` descending when the column exists and no
   `orderBy` is given.
 - `update`/`upsert` set `updatedAt = new Date()`.
+- Reads return `createdAt`/`updatedAt` as ISO strings, and writes accept
+  either those strings or a `Date`.
 - `create` generates an id with `crypto.randomUUID` where available.
 - `pg` and the node-postgres driver load lazily, only when the adapter must
   build its own pool; passing `db` works without `pg` installed, including

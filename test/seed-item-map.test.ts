@@ -130,6 +130,28 @@ describe("seedItemMap", () => {
     ]);
   });
 
+  it("strips the adapter's own metadata rather than writing it as fields", async () => {
+    const backend = fakeAdapter();
+    const createWithId = vi.spyOn(backend.adapter, "createWithId");
+
+    // The shape a snapshot read back from a backend actually has.
+    await seedItemMap(backend.adapter, {
+      portfolio: [
+        {
+          id: "hero",
+          collection: "portfolio",
+          createdAt: "2020-01-01T00:00:00.000Z",
+          updatedAt: "2020-01-01T00:00:00.000Z",
+          title: "Hello",
+        },
+      ],
+    });
+
+    expect(createWithId).toHaveBeenCalledWith("portfolio", "hero", {
+      title: "Hello",
+    });
+  });
+
   it("addresses the record by id rather than storing id as a field", async () => {
     const backend = fakeAdapter();
     const createWithId = vi.spyOn(backend.adapter, "createWithId");
@@ -389,33 +411,35 @@ describe("seedItemMap against the Postgres adapter", () => {
       projects: { query: { orderBy: [{ field: "order", direction: "asc" }] } },
     });
 
-    // The Postgres adapter adds `collection` to every row it reads, which the
-    // Firestore adapter does not. That divergence is the adapters', not the
-    // seeder's; pinned here so a future fix has to notice this test.
-    expect(read.projects).toEqual([
-      { id: "one", collection: "projects", title: "One", order: 0 },
-      { id: "two", collection: "projects", title: "Two", order: 1 },
+    expect(read.projects).toMatchObject([
+      { id: "one", title: "One", order: 0 },
+      { id: "two", title: "Two", order: 1 },
     ]);
+    // Reads carry the adapter's timestamps on both backends now.
+    expect(read.projects?.[0]).toHaveProperty("createdAt");
   });
 
-  it("does not write the address back as a field when copying between backends", async () => {
+  it("re-seeds its own snapshot unchanged", async () => {
     await seedItemMap(adapter, { projects: [{ id: "one", title: "One" }] });
-
-    // A Postgres-sourced ItemMap carries `collection`; re-seeding it must not
-    // turn that into a stored field, or a Firestore target would gain one.
     const snapshot = await loadItemMap(adapter, { projects: {} });
-    expect(snapshot.projects?.[0]).toHaveProperty("collection");
+    expect(snapshot.projects?.[0]).not.toHaveProperty("collection");
 
     const createWithId = vi.spyOn(adapter, "createWithId");
     await seedItemMap(adapter, snapshot);
 
-    // `collection` is gone; `order: null` remains because a SQL read returns
-    // every column, unset ones included. That is the backend's shape, not an
-    // address, so the seeder passes it through.
-    expect(createWithId).toHaveBeenCalledWith("projects", "one", {
-      title: "One",
-      order: null,
-    });
+    // `order: null` remains because a SQL read returns every column, unset
+    // ones included. That is the backend's shape, not an address, so the
+    // seeder passes it through.
+    // `order: null` remains because a SQL read returns every column, unset
+    // ones included, and the timestamps ride along the same way. Those are the
+    // backend's shape rather than the record's address, so the seeder passes
+    // them through; `createWithId` stamps its own over them.
+    expect(createWithId).toHaveBeenCalledWith(
+      "projects",
+      "one",
+      expect.objectContaining({ title: "One", order: null }),
+    );
+    expect(createWithId.mock.calls[0]?.[2]).not.toHaveProperty("collection");
     createWithId.mockRestore();
   });
 

@@ -78,13 +78,16 @@ describe("PostgresDataAdapter — typed round-trips", () => {
     const row = await adapter.fetchById("projects", "p1");
     expect(row).toMatchObject({
       id: "p1",
-      collection: "projects",
       title: "Hello",
       views: 7,
       published: true,
       date: "2024-01-15",
       tags: ["react", "sql"],
     });
+    // `collection` is the record's address, not a field. It used to be added
+    // here and never was by the Firestore adapter, which made the read shape
+    // depend on the backend.
+    expect(row).not.toHaveProperty("collection");
   });
 
   it("returns null for a missing id", async () => {
