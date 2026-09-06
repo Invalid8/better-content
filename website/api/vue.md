@@ -9,11 +9,11 @@ dependency; the binding imports only `shallowRef` and `onScopeDispose`.
 function useCmsSnapshot(engine: CmsEngine): Readonly<ShallowRef<CmsSnapshot>>;
 // whole-engine ref; updates on every engine change
 
-function useCmsItem(
+function useCmsItem<T = Record<string, unknown>>(
   engine: CmsEngine,
   collection: string,
   id: string,
-): Readonly<ShallowRef<Item | undefined>>;
+): Readonly<ShallowRef<Item<T> | undefined>>;
 // fine-grained: updates only when this item's reference changes
 ```
 

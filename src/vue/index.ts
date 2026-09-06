@@ -19,14 +19,19 @@ export function useCmsSnapshot(
   return snapshot;
 }
 
-export function useCmsItem(
+export function useCmsItem<T = Record<string, unknown>>(
   engine: CmsEngine,
   collection: string,
   id: string,
-): Readonly<ShallowRef<Item | undefined>> {
-  const item = shallowRef(engine.getItem(collection, id));
+): Readonly<ShallowRef<Item<T> | undefined>> {
+  // Annotated rather than `shallowRef<Item<T> | undefined>(...)`: Vue's
+  // shallowRef returns a conditional type that cannot resolve while T is
+  // still generic, and the unresolved union is not assignable to ShallowRef.
+  const item: ShallowRef<Item<T> | undefined> = shallowRef(
+    engine.getItem<T>(collection, id),
+  );
   const stop = engine.subscribe(() => {
-    const next = engine.getItem(collection, id);
+    const next = engine.getItem<T>(collection, id);
     if (!Object.is(next, item.value)) {
       item.value = next;
     }

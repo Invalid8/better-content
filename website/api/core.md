@@ -24,7 +24,7 @@ interface CmsEngine {
   subscribe(listener: () => void): () => void;
 
   // reads
-  getItem(collection: string, id: string): Item | undefined;
+  getItem<T = Record<string, unknown>>(collection: string, id: string): Item<T> | undefined;
 
   // deferred field editing
   editField(collection: string, id: string, fieldKey: string, value: unknown): void;
@@ -33,9 +33,10 @@ interface CmsEngine {
   saveAll(): Promise<void>;
 
   // immediate item operations (optimistic, roll back on failure, rethrow)
-  createItem(collection: string, data: Record<string, unknown>,
+  createItem<T extends object = Record<string, unknown>>(collection: string, data: T,
              opts?: { id?: string; atStart?: boolean }): Promise<string>; // returns id
-  updateItem(collection: string, id: string, patch: Record<string, unknown>): Promise<void>;
+  updateItem<T extends object = Record<string, unknown>>(collection: string, id: string,
+             patch: Partial<T>): Promise<void>;
   deleteItem(collection: string, id: string): Promise<void>;
   reorderItems(collection: string, orderedIds: string[]): Promise<void>;
 }
@@ -112,9 +113,31 @@ check the engine would start empty and the page would render blank.
 ## Content types
 
 ```ts
-type Item = Record<string, unknown> & { id: string };
+type Item<T = Record<string, unknown>> = T & { id: string };
 type ItemMap = Record<string, Item[]>;
+```
 
+`Item` with no argument is what it has always been. Supply `T` to read fields
+at their real types instead of `unknown`:
+
+```ts
+const banner = engine.getItem<Banner>("portfolio", "banner");
+banner?.skills;                        // Skill[] | undefined, not unknown
+
+await engine.createItem<Project>("projects", { title: "Portfolio", order: 0 });
+await engine.updateItem<Project>("projects", id, { order: 3 });
+```
+
+The two directions are not the same promise. On a **read**, `T` is an
+assertion: nothing verifies the record matches, exactly as
+`DataAdapter.fetchCollection<T>` has never verified it. On a **write**, `T` is
+checked, because you pass the object and TypeScript compares it to the shape.
+
+The write constraint is `T extends object`, not `Record<string, unknown>`, so
+your own `interface` types work. `ItemMap` is deliberately not generic: a list
+read wants a runtime type guard, which narrows for real.
+
+```ts
 interface EntityAddress { id: string; collection: string }
 type Editable<T> = T & EntityAddress;
 

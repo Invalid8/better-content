@@ -25,7 +25,17 @@ export interface CmsEngineOptions {
 export interface CmsEngine {
   getSnapshot(): CmsSnapshot;
   subscribe(listener: () => void): () => void;
-  getItem(collection: string, id: string): Item | undefined;
+  /**
+   * The record at this address, or `undefined`.
+   *
+   * `T` is the shape you expect and is **not** checked at runtime, exactly as
+   * `DataAdapter.fetchCollection<T>` is not. It replaces a cast at the call
+   * site with one assertion here, at the seam where you named the type.
+   */
+  getItem<T = Record<string, unknown>>(
+    collection: string,
+    id: string,
+  ): Item<T> | undefined;
   editField(
     collection: string,
     id: string,
@@ -35,15 +45,22 @@ export interface CmsEngine {
   setPendingImage(image: PendingImage): void;
   saveItem(collection: string, id: string): Promise<void>;
   saveAll(): Promise<void>;
-  createItem(
+  /**
+   * Adds a record and returns its id.
+   *
+   * Unlike `getItem<T>`, `T` here is *checked*: you pass the object, so
+   * TypeScript verifies it against the shape you named.
+   */
+  createItem<T extends object = Record<string, unknown>>(
     collection: string,
-    data: Record<string, unknown>,
+    data: T,
     opts?: CreateItemOptions,
   ): Promise<string>;
-  updateItem(
+  /** Patches the given fields of an existing record. `T` is checked, as above. */
+  updateItem<T extends object = Record<string, unknown>>(
     collection: string,
     id: string,
-    patch: Record<string, unknown>,
+    patch: Partial<T>,
   ): Promise<void>;
   deleteItem(collection: string, id: string): Promise<void>;
   reorderItems(collection: string, orderedIds: string[]): Promise<void>;
@@ -73,7 +90,7 @@ export function createCmsEngine(options: CmsEngineOptions): CmsEngine {
     for (const listener of listeners) listener();
   };
 
-  const getItem = (collection: string, id: string): Item | undefined =>
+  const readItem = (collection: string, id: string): Item | undefined =>
     items[collection]?.find((it) => it.id === id);
 
   const replaceList = (collection: string, list: Item[]) => {
@@ -116,7 +133,7 @@ export function createCmsEngine(options: CmsEngineOptions): CmsEngine {
       (img) => img.collection === collection && img.itemId === id,
     );
 
-    let item = getItem(collection, id) ?? ({ id } as Item);
+    let item = readItem(collection, id) ?? ({ id } as Item);
     for (const img of images) {
       const url = await resolveImageUrl(img);
       item = setPath(item, img.fieldKey, url) as Item;
@@ -141,10 +158,12 @@ export function createCmsEngine(options: CmsEngineOptions): CmsEngine {
       };
     },
 
-    getItem,
+    getItem<T = Record<string, unknown>>(collection: string, id: string) {
+      return readItem(collection, id) as Item<T> | undefined;
+    },
 
     editField(collection, id, fieldKey, value) {
-      const existing = getItem(collection, id) ?? ({ id } as Item);
+      const existing = readItem(collection, id) ?? ({ id } as Item);
       upsertLocal(collection, id, setPath(existing, fieldKey, value) as Item);
       markDirty(collection, id);
       emit();
@@ -201,12 +220,18 @@ export function createCmsEngine(options: CmsEngineOptions): CmsEngine {
       }
     },
 
-    async createItem(collection, data, opts) {
+    async createItem<T extends object = Record<string, unknown>>(
+      collection: string,
+      data: T,
+      opts?: CreateItemOptions,
+    ) {
       const id =
         opts?.id ??
         globalThis.crypto?.randomUUID?.() ??
         `${collection}-${Date.now()}`;
-      const item: Item = { id, ...data };
+      // The engine stores records untyped; `T` described the caller's payload
+      // and has done its checking by here.
+      const item = { id, ...data } as Item;
 
       const list = items[collection] ?? [];
       replaceList(collection, opts?.atStart ? [item, ...list] : [...list, item]);
@@ -227,7 +252,11 @@ export function createCmsEngine(options: CmsEngineOptions): CmsEngine {
       }
     },
 
-    async updateItem(collection, id, patch) {
+    async updateItem<T extends object = Record<string, unknown>>(
+      collection: string,
+      id: string,
+      patch: Partial<T>,
+    ) {
       const previous = items[collection] ?? [];
       replaceList(
         collection,
