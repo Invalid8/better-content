@@ -4,6 +4,7 @@ import svelte from "@astrojs/svelte";
 import vue from "@astrojs/vue";
 
 export default defineConfig({
+  site: "https://better-content-playground.vercel.app",
   integrations: [react(), svelte(), vue()],
   vite: {
     resolve: {
