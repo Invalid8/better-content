@@ -5,7 +5,7 @@ import {
   type CmsEngine,
 } from "better-content/core";
 import { loadItemMap } from "better-content/server";
-import { adapter, initDb } from "./db";
+import { loadAdapter } from "./db";
 import { statusStore } from "./status";
 
 // Uploaded images become data URLs so the whole demo stays inside your tab.
@@ -24,7 +24,7 @@ const dataUrlStorage: ClientStorageAdapter = {
 // framework, binds to this exact object. The engine itself never
 // imports React, Vue, or Svelte.
 export const ready: Promise<CmsEngine> = (async () => {
-  await initDb();
+  const adapter = await loadAdapter();
 
   const initialItems = await loadItemMap(adapter, {
     page: {},

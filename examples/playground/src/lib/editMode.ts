@@ -1,4 +1,4 @@
-const KEY = "bc-playground-editing";
+const KEY = "bc-editing";
 
 let editing =
   typeof sessionStorage !== "undefined" && sessionStorage.getItem(KEY) === "1";

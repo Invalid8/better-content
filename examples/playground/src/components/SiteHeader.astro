@@ -1,0 +1,107 @@
+---
+import { Check, Moon, Pencil, Sun, Undo2 } from "@lucide/astro";
+---
+
+<header class="site-header" id="top">
+  <div class="site-header__inner">
+    <a class="site-brand" href="/">
+      <img src="/logo.svg" alt="" aria-hidden="true" width="24" height="24" />
+      <span>better-content</span>
+    </a>
+
+    <nav class="site-nav" aria-label="Primary">
+      <a href="https://better-content-docs.vercel.app" target="_blank" rel="noreferrer">Docs</a>
+      <a href="#adapters">Adapters</a>
+      <a href="https://github.com/Invalid8/better-content" target="_blank" rel="noreferrer">GitHub</a>
+    </nav>
+
+    <div class="site-actions">
+      <button class="icon-button" id="theme-toggle" type="button" title="Switch theme">
+        <Sun class="theme-icon theme-icon--light" aria-hidden="true" size={15} stroke-width={1.8} />
+        <Moon class="theme-icon theme-icon--dark" aria-hidden="true" size={15} stroke-width={1.8} />
+        <span class="sr-only">Switch theme</span>
+      </button>
+
+      <button
+        class="button button--quiet when-editing"
+        id="discard-all"
+        type="button"
+        aria-label="Discard unsaved changes"
+      >
+        <Undo2 aria-hidden="true" size={14} stroke-width={1.9} />
+        <span class="button__label">Discard</span>
+      </button>
+
+      <button class="button button--ink when-reading" id="toggle-edit" type="button" aria-pressed="false" aria-label="Turn on edit mode">
+        <Pencil aria-hidden="true" size={14} stroke-width={1.9} />
+        <span class="button__label">Edit mode</span>
+        <kbd><span class="kbd-mod">⌘</span>E</kbd>
+      </button>
+
+      <button class="button button--mark when-editing" id="save-all" type="button" aria-label="Save all changes">
+        <Check aria-hidden="true" size={14} stroke-width={2.2} />
+        <span class="button__label">Save all</span>
+        <kbd><span class="kbd-mod">⌘</span>S</kbd>
+      </button>
+    </div>
+  </div>
+</header>
+
+<p class="sr-only" id="engine-status" role="status" aria-live="polite"></p>
+
+<script>
+  import { ready } from "../lib/engine";
+  import { editMode } from "../lib/editMode";
+  import { statusStore } from "../lib/status";
+
+  const editButton = document.getElementById("toggle-edit") as HTMLButtonElement | null;
+  const saveButton = document.getElementById("save-all") as HTMLButtonElement | null;
+  const discardButton = document.getElementById("discard-all") as HTMLButtonElement | null;
+  const themeButton = document.getElementById("theme-toggle") as HTMLButtonElement | null;
+  const status = document.getElementById("engine-status");
+
+  editButton?.addEventListener("click", editMode.toggle);
+  editMode.subscribe(() => {
+    editButton?.setAttribute("aria-pressed", String(editMode.get()));
+  });
+
+  const THEME_KEY = "bc-theme";
+  const applyTheme = (theme: string) => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  };
+  themeButton?.addEventListener("click", () => {
+    applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  });
+
+  statusStore.subscribe(() => {
+    if (status) status.textContent = statusStore.get();
+  });
+
+  void ready.then((engine) => {
+    const render = () => {
+      const { hasUnsavedChanges, saving } = engine.getSnapshot();
+      if (saveButton) saveButton.disabled = !hasUnsavedChanges || saving;
+      if (discardButton) discardButton.disabled = !hasUnsavedChanges || saving;
+    };
+
+    saveButton?.addEventListener("click", () => void engine.saveAll());
+    discardButton?.addEventListener("click", () => location.reload());
+
+    window.addEventListener("keydown", (event) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      if (key === "e") {
+        event.preventDefault();
+        editMode.toggle();
+      }
+      if (key === "s" && editMode.get()) {
+        event.preventDefault();
+        void engine.saveAll();
+      }
+    });
+
+    engine.subscribe(render);
+    render();
+  });
+</script>

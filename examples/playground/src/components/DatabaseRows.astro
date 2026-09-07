@@ -1,24 +1,40 @@
-<section class="database-panel" id="database" aria-labelledby="database-title">
+---
+const fields = [
+  ["hero.headline", "page", "hero", "headline"],
+  ["hero.tagline", "page", "hero", "tagline"],
+  ["hero.intro", "page", "hero", "intro"],
+  ["shared.message", "page", "shared", "message"],
+  ["cards[0].title", "cards", "cards-are-rows", "title"],
+  ["cards[1].title", "cards", "ops-are-optimistic", "title"],
+];
+---
+
+<section class="database-panel" aria-labelledby="database-title">
   <div class="panel-bar">
     <span class="bar-label" id="database-title">your database</span>
-    <span class="row-pill" id="database-count">0 rows</span>
+    <span class="row-pill">{fields.length} rows</span>
   </div>
-  <div class="database-table" id="database-table" aria-live="polite"></div>
+  <div class="database-table" aria-live="polite">
+    {
+      fields.map(([key, collection, id, field]) => (
+        <div
+          class="database-row"
+          data-collection={collection}
+          data-id={id}
+          data-field={field}
+        >
+          <code>{key}</code>
+          <span class="database-row__value" data-placeholder />
+        </div>
+      ))
+    }
+  </div>
 </section>
 
 <script>
   import { ready } from "../lib/engine";
 
-  const table = document.getElementById("database-table")!;
-  const count = document.getElementById("database-count")!;
-
-  const fields = [
-    ["hero.headline", "page", "hero", "headline"],
-    ["hero.intro", "page", "hero", "intro"],
-    ["shared.message", "page", "shared", "message"],
-    ["cards[0].title", "cards", "cards-are-rows", "title"],
-    ["cards[1].title", "cards", "ops-are-optimistic", "title"],
-  ] as const;
+  const rows = document.querySelectorAll<HTMLElement>(".database-row");
 
   const shorten = (value: unknown) => {
     const text = value == null ? "" : String(value);
@@ -28,17 +44,13 @@
   void ready.then((engine) => {
     const render = () => {
       const { items } = engine.getSnapshot();
-      table.replaceChildren();
-      for (const [key, collection, id, field] of fields) {
-        const row = items[collection]?.find((item) => item.id === id);
-        const item = document.createElement("div");
-        item.className = "database-row";
-        item.innerHTML = `<code></code><span></span>`;
-        item.querySelector("code")!.textContent = key;
-        item.querySelector("span")!.textContent = shorten(row?.[field]);
-        table.append(item);
+      for (const row of rows) {
+        const { collection, id, field } = row.dataset;
+        const item = items[collection!]?.find((entry) => entry.id === id);
+        const value = row.querySelector<HTMLElement>(".database-row__value")!;
+        value.textContent = shorten(item?.[field!]);
+        value.removeAttribute("data-placeholder");
       }
-      count.textContent = `${fields.length} rows`;
     };
     engine.subscribe(render);
     render();

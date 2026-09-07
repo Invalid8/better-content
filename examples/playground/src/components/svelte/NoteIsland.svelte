@@ -1,11 +1,11 @@
 <script lang="ts">
   import { ready } from "../../lib/engine";
   import { editModeStore } from "../../lib/editMode";
-  import PreviewFrame from "./PreviewFrame.svelte";
+  import NoteCard from "./NoteCard.svelte";
 </script>
 
 {#await ready}
-  <p class="island-loading">starting Svelte preview...</p>
+  <p class="island-loading">starting Svelte...</p>
 {:then engine}
-  <PreviewFrame {engine} editing={$editModeStore} />
+  <NoteCard {engine} editing={$editModeStore} />
 {/await}
