@@ -5,12 +5,54 @@ import "@fontsource/ibm-plex-sans/500.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "../styles.css";
-import Toolbar from "../components/Toolbar.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 
 const { title, description } = Astro.props as {
   title: string;
   description: string;
 };
+
+const DOCS = "https://better-content-docs.vercel.app";
+const REPO = "https://github.com/Invalid8/better-content";
+
+const footerColumns = [
+  {
+    heading: "Learn",
+    links: [
+      ["Quickstart", `${DOCS}/quickstart`],
+      ["Guides", `${DOCS}/guides`],
+      ["API reference", `${DOCS}/api`],
+      ["Migration", `${DOCS}/migration`],
+    ],
+  },
+  {
+    heading: "Adapters",
+    links: [
+      ["Postgres", `${DOCS}/adapters/postgres`],
+      ["Firestore", `${DOCS}/adapters/firestore`],
+      ["In-memory", `${DOCS}/adapters/memory`],
+      ["Write your own", `${DOCS}/adapters`],
+    ],
+  },
+  {
+    heading: "Bindings",
+    links: [
+      ["React", `${DOCS}/react`],
+      ["Vue", `${DOCS}/vue`],
+      ["Svelte", `${DOCS}/svelte`],
+      ["Core", `${DOCS}/core`],
+    ],
+  },
+  {
+    heading: "Project",
+    links: [
+      ["GitHub", REPO],
+      ["npm", "https://www.npmjs.com/package/better-content"],
+      ["Changelog", `${REPO}/blob/main/CHANGELOG.md`],
+      ["License", `${REPO}/blob/main/LICENSE`],
+    ],
+  },
+];
 ---
 
 <!doctype html>
@@ -25,37 +67,42 @@ const { title, description } = Astro.props as {
     />
     <title>{title}</title>
     <script is:inline>
-      document.documentElement.dataset.theme = "light";
+      document.documentElement.dataset.theme =
+        localStorage.getItem("bc-theme") ?? "light";
     </script>
   </head>
   <body>
-    <Toolbar />
-    <div class="site-shell">
-      <slot />
-      <footer class="footer">
-        <a
-          href="https://github.com/Invalid8/better-content"
-          target="_blank"
-          rel="noreferrer"
-        >
-          github.com/Invalid8/better-content
-        </a>
-        <a
-          href="https://better-content-docs.vercel.app"
-          target="_blank"
-          rel="noreferrer"
-        >
-          docs
-        </a>
-        <a
-          href="https://www.npmjs.com/package/better-content"
-          target="_blank"
-          rel="noreferrer"
-        >
-          npm
-        </a>
-        <span>MIT · framework-neutral content engine</span>
-      </footer>
-    </div>
+    <SiteHeader />
+    <slot />
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <div class="site-footer__brand">
+          <a class="site-brand" href="/">
+            <img src="/logo.svg" alt="" aria-hidden="true" width="24" height="24" />
+            <span>better-content</span>
+          </a>
+          <p>Own-your-data inline editing. MIT.</p>
+        </div>
+
+        {
+          footerColumns.map((column) => (
+            <nav class="site-footer__column" aria-label={column.heading}>
+              <p class="site-footer__heading">{column.heading}</p>
+              {column.links.map(([label, href]) => (
+                <a href={href} target="_blank" rel="noreferrer">
+                  {label}
+                </a>
+              ))}
+            </nav>
+          ))
+        }
+      </div>
+
+      <div class="site-footer__colophon">
+        <span>Pre-1.0. Minor versions may break until 1.0.</span>
+        <span>Every word on this page is a row you can edit.</span>
+      </div>
+    </footer>
   </body>
 </html>

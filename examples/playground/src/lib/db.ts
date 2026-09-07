@@ -1,8 +1,7 @@
-import { PGlite } from "@electric-sql/pglite";
-import { drizzle } from "drizzle-orm/pglite";
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { PostgresDataAdapter } from "better-content/adapters/postgres";
-import type { DataAdapter, Item, ItemMap, Query } from "better-content/core";
+import type { DataAdapter, Item, Query } from "better-content/core";
+import { seedItems } from "./seed";
+
+export { seedItems };
 
 export type AdapterId = "pglite" | "memory" | "rest";
 
@@ -30,92 +29,6 @@ export const adapterOptions: Array<{
       "A DataAdapter shaped like an HTTP SDK: adds latency and logs each call to the console.",
   },
 ];
-
-// The playground schema: two tables, owned by the app, not by the library.
-const page = pgTable("page", {
-  id: text("id").primaryKey(),
-  headline: text("headline"),
-  intro: text("intro"),
-  message: text("message"),
-  cover: text("cover"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-const cards = pgTable("cards", {
-  id: text("id").primaryKey(),
-  title: text("title"),
-  body: text("body"),
-  order: integer("order"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-const schema = { page, cards };
-
-const DDL = `
-  CREATE TABLE IF NOT EXISTS page (
-    id         text PRIMARY KEY,
-    headline   text,
-    intro      text,
-    message    text,
-    cover      text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
-  );
-  CREATE TABLE IF NOT EXISTS cards (
-    id         text PRIMARY KEY,
-    title      text,
-    body       text,
-    "order"    integer,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
-  );
-`;
-
-export const seedItems: ItemMap = {
-  page: [
-    {
-      id: "hero",
-      headline: "This page is a database.",
-      intro:
-        "Every block of text you can read here is a row. Toggle Edit in the toolbar, click any highlighted text, change it, press Save, then swap adapters to see the same UI talk to another backend.",
-      cover: "/images/content-playground-hero.png",
-    },
-    {
-      id: "shared",
-      message:
-        "One engine holds this sentence. React, Vue, and Svelte are three ways of looking at it. Edit me in any island, click away, and watch the other two follow.",
-    },
-  ],
-  cards: [
-    {
-      id: "cards-are-rows",
-      title: "Cards are rows",
-      body: "This card is a row in the cards table. Its title and body are columns you are reading through the adapter.",
-      order: 0,
-    },
-    {
-      id: "ops-are-optimistic",
-      title: "Ops are optimistic",
-      body: "Create, reorder, and delete update the snapshot immediately and roll back if the adapter rejects the write.",
-      order: 1,
-    },
-    {
-      id: "order-is-an-integer",
-      title: "Order is an integer",
-      body: "Reordering patches each row with a new order value through the transport. No hidden magic.",
-      order: 2,
-    },
-  ],
-};
-
-const client = new PGlite("idb://better-content-playground");
-
-const pgliteAdapter = new PostgresDataAdapter({
-  db: drizzle(client, { schema }) as never,
-  schema: schema as never,
-});
 
 function applyQuery(rows: Item[], query?: Query): Item[] {
   let next = [...rows];
@@ -283,7 +196,7 @@ function readAdapterId(): AdapterId {
   const hash = new URLSearchParams(window.location.hash.slice(1));
   const candidate =
     (hash.get("adapter") as AdapterId | null) ??
-    (localStorage.getItem("bc-playground-adapter") as AdapterId | null) ??
+    (localStorage.getItem("bc-adapter") as AdapterId | null) ??
     "memory";
   return adapterOptions.some((option) => option.id === candidate)
     ? candidate
@@ -292,47 +205,35 @@ function readAdapterId(): AdapterId {
 
 export const activeAdapterId = readAdapterId();
 
-const memoryAdapter = new MapDataAdapter();
-const restAdapter = new MockRestAdapter();
+let loaded: DataAdapter | null = null;
 
-export const adapter: DataAdapter =
-  activeAdapterId === "memory"
-    ? memoryAdapter
-    : activeAdapterId === "rest"
-      ? restAdapter
-      : pgliteAdapter;
+export async function loadAdapter(): Promise<DataAdapter> {
+  if (loaded) return loaded;
 
-async function seedThrough(target: DataAdapter): Promise<void> {
-  for (const [collection, rows] of Object.entries(seedItems)) {
-    for (const { id, ...fields } of rows) {
-      await target.createWithId(collection, id, fields);
-    }
+  if (activeAdapterId === "pglite") {
+    const pglite = await import("./pgliteAdapter");
+    await pglite.init();
+    loaded = pglite.adapter;
+    return loaded;
   }
-}
 
-export async function initDb(): Promise<void> {
-  if (activeAdapterId !== "pglite") return;
-  await client.exec(DDL);
-  const existing = await client.query<{ n: number }>(
-    "SELECT count(*)::int AS n FROM page",
-  );
-  if ((existing.rows[0]?.n ?? 0) === 0) {
-    await seedThrough(pgliteAdapter);
-  }
+  loaded =
+    activeAdapterId === "rest" ? new MockRestAdapter() : new MapDataAdapter();
+  return loaded;
 }
 
 export async function resetDemo(): Promise<void> {
   if (activeAdapterId === "pglite") {
-    await client.exec('DELETE FROM page; DELETE FROM cards;');
-    await seedThrough(pgliteAdapter);
-  } else {
-    (adapter as MapDataAdapter).replace(seedItems);
+    const pglite = await import("./pgliteAdapter");
+    await pglite.reset();
+  } else if (loaded) {
+    (loaded as MapDataAdapter).replace(seedItems);
   }
   location.reload();
 }
 
 export function setAdapter(id: AdapterId): void {
-  localStorage.setItem("bc-playground-adapter", id);
+  localStorage.setItem("bc-adapter", id);
   const params = new URLSearchParams(window.location.hash.slice(1));
   params.set("adapter", id);
   window.location.hash = params.toString();
