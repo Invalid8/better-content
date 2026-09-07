@@ -7,6 +7,7 @@ const description_ =
 
 export default defineConfig({
   title: "better-content",
+  cleanUrls: true,
   description: description_,
   head: [
     ["link", { rel: "icon", href: "/logo.svg", type: "image/svg+xml" }],
