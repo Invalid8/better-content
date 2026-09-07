@@ -7,24 +7,27 @@ const snapshot = useCmsSnapshot(props.engine);
 </script>
 
 <template>
-  <article class="note-card" data-framework="vue">
-    <header>
-      <h3>Vue</h3>
-      <code>v-content-edit</code>
+  <article class="island" data-framework="vue">
+    <header class="island__bar">
+      <span class="island__dot"></span>
+      <span class="island__name">Vue</span>
+      <code class="island__hook">v-content-edit</code>
+      <span class="island__state" :data-dirty="snapshot.hasUnsavedChanges || undefined">
+        {{ snapshot.hasUnsavedChanges ? "unsaved" : "synced" }}
+      </span>
     </header>
-    <p
-      class="note-text"
-      v-content-edit="{
-        engine,
-        collection: 'page',
-        itemId: 'shared',
-        fieldKey: 'message',
-        editing,
-      }"
-    ></p>
-    <footer>
-      unsaved changes:
-      <strong>{{ snapshot.hasUnsavedChanges ? "yes" : "no" }}</strong>
-    </footer>
+    <div class="island__body">
+      <p class="island__path">page / shared.message</p>
+      <p
+        class="island__text"
+        v-content-edit="{
+          engine,
+          collection: 'page',
+          itemId: 'shared',
+          fieldKey: 'message',
+          editing,
+        }"
+      ></p>
+    </div>
   </article>
 </template>
