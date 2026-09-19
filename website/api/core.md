@@ -2,6 +2,11 @@
 
 Framework-free. Safe to import anywhere.
 
+The bare specifier is the same entry: `better-content` re-exports everything on
+this page, so `import { createCmsEngine } from "better-content"` and
+`from "better-content/core"` are interchangeable. Every other entry point has
+its own subpath.
+
 ## createCmsEngine
 
 ```ts
@@ -233,7 +238,6 @@ interface CmsAuthState {
 ```ts
 function setPath(obj: Record<string, unknown>, fieldKey: string, value: unknown): Record<string, unknown>;
 function getPath(obj: unknown, path: string): unknown;
-function dirtyKey(collection: string, id: string): string;   // "collection:id"
 ```
 
 `setPath` is the immutable dotted-path setter the engine uses; `getPath` is

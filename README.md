@@ -136,6 +136,7 @@ It is a framework-free custom element underneath
 
 | Import | What | Runs on |
 |---|---|---|
+| `better-content` | the same as `/core`; the bare specifier is an alias | anywhere |
 | `better-content/core` | engine, `Transport` (`restTransport`, `adapterTransport`, `inMemoryTransport`), types | anywhere |
 | `better-content/react` | `PageProvider`, `ContentEditSpan`, `EditableImage`, `useCmsItem`, `useMarkdownEditor`, auth context | client |
 | `better-content/svelte` | `engineStore`, `itemStore`, `contentEdit` action, `imageEdit`, `markdownEdit` | client |

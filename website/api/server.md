@@ -2,7 +2,7 @@
 
 Server-side building blocks over web-standard Request/Response. No framework
 dependency; works in Next.js route handlers, Remix, Hono, Bun, or plain
-Node 18+.
+Node 20+.
 
 ## createCmsHandlers
 

@@ -1,5 +1,4 @@
 export {
-  PageContext,
   PageProvider,
   type PageContextValue,
   type PageProviderProps,
