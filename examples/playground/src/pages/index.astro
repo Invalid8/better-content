@@ -8,6 +8,9 @@ import RowsIsland from "../components/react/RowsIsland";
 import ReactNoteIsland from "../components/react/NoteIsland";
 import VueNoteIsland from "../components/vue/NoteIsland.vue";
 import SvelteNoteIsland from "../components/svelte/NoteIsland.svelte";
+import ReactMarkdownIsland from "../components/react/MarkdownIsland";
+import VueMarkdownIsland from "../components/vue/MarkdownIsland.vue";
+import SvelteMarkdownIsland from "../components/svelte/MarkdownIsland.svelte";
 import { ArrowRight, Copy, Pencil } from "@lucide/astro";
 
 import engineSource from "../lib/engine.ts?raw";
@@ -17,6 +20,9 @@ import restAdapterSource from "../snippets/adapters/rest.ts?raw";
 import reactNoteSource from "../components/react/NoteCard.tsx?raw";
 import vueNoteSource from "../components/vue/NoteCard.vue?raw";
 import svelteNoteSource from "../components/svelte/NoteCard.svelte?raw";
+import reactMarkdownSource from "../components/react/MarkdownCard.tsx?raw";
+import vueMarkdownSource from "../components/vue/MarkdownCard.vue?raw";
+import svelteMarkdownSource from "../components/svelte/MarkdownCard.svelte?raw";
 
 const steps = [
   {
@@ -201,10 +207,41 @@ const contract = [
       </div>
     </section>
 
+    <section class="section" id="markdown">
+      <div class="shell">
+        <header class="section__head">
+          <p class="chip">05 — Markdown</p>
+          <h2>A draft is yours until you save it.</h2>
+          <p class="section__deck">
+            One headless primitive, three bindings: <code>useMarkdownEditor</code> in React and Vue, <code>markdownEdit</code> in Svelte.
+            It wraps whatever you have selected, counts the characters and hands
+            you the string. No toolbar and no parser ship with it, so the
+            rendering you are reading is the demo's own thirty lines, and
+            nothing reaches the engine until Save writes it to the row.
+          </p>
+        </header>
+
+        <div class="islands">
+          <ReactMarkdownIsland client:only="react" />
+          <VueMarkdownIsland client:only="vue" />
+          <SvelteMarkdownIsland client:only="svelte" />
+        </div>
+
+        <CodeTabs
+          label="Markdown sources"
+          files={[
+            { name: "React", code: reactMarkdownSource },
+            { name: "Vue", code: vueMarkdownSource },
+            { name: "Svelte", code: svelteMarkdownSource },
+          ]}
+        />
+      </div>
+    </section>
+
     <section class="section" id="adapters">
       <div class="shell">
         <header class="section__head">
-          <p class="chip">05 — Adapters</p>
+          <p class="chip">06 — Adapters</p>
           <h2>Seven methods stand between us and your database.</h2>
           <p class="section__deck">
             There is no hosted service to sign up for and no proprietary backend

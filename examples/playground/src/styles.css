@@ -888,6 +888,107 @@ code {
   font-size: 0.8rem;
 }
 
+.draft__tools {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.draft__tools button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  background: var(--panel-soft);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+
+.draft__tools button:hover:not([disabled]) {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.draft__area {
+  width: 100%;
+  min-height: 9rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.7rem 0.75rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.65;
+  resize: vertical;
+}
+
+.draft__area:focus-visible {
+  outline: 2px solid var(--mark-line);
+  outline-offset: 1px;
+}
+
+.draft__rendered {
+  min-height: 9rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.draft__rendered p + p {
+  margin-top: 0.75rem;
+}
+
+.draft__rendered strong {
+  font-weight: 600;
+}
+
+.draft__rendered code {
+  color: var(--muted);
+  font-size: 0.86em;
+}
+
+.draft__rendered a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--mark-line);
+  text-underline-offset: 2px;
+}
+
+.draft__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.draft__button {
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.draft__button:hover:not([disabled]) {
+  color: var(--ink);
+}
+
+.draft__button--mark {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--code-bg);
+}
+
+.draft__tools button[disabled],
+.draft__button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .engine-bar {
   display: flex;
   flex-wrap: wrap;

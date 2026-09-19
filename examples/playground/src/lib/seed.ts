@@ -15,6 +15,18 @@ export const seedItems: ItemMap = {
       message:
         "One engine holds this sentence. React, Vue and Svelte are three ways of looking at it. Edit it in any island, click away, and watch the other two follow.",
     },
+    {
+      id: "note-react",
+      body: "**React** keeps this draft in `useMarkdownEditor`, not in the engine.\n\nSelect a word and press bold: the primitive wraps your selection and leaves the caret inside the wrap.",
+    },
+    {
+      id: "note-vue",
+      body: "**Vue** calls the same composable, `useMarkdownEditor`, and binds `textareaRef` to this element.\n\nOne framework-free controller, three bindings over it.",
+    },
+    {
+      id: "note-svelte",
+      body: "**Svelte** gets `markdownEdit`, a readable store with a `textarea` action.\n\nSave writes the string to the row. Until then it is only a draft.",
+    },
   ],
   cards: [
     {

@@ -8,7 +8,9 @@ export default defineConfig({
   integrations: [react(), svelte(), vue()],
   vite: {
     resolve: {
-      dedupe: ["react", "react-dom"],
+      // Two copies of a framework means refs made by one are invisible to the
+      // other's render effect. The file:../.. link makes this reachable.
+      dedupe: ["react", "react-dom", "vue"],
     },
     optimizeDeps: {
       exclude: ["@electric-sql/pglite"],

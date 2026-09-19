@@ -12,6 +12,7 @@ const page = pgTable("page", {
   tagline: text("tagline"),
   intro: text("intro"),
   message: text("message"),
+  body: text("body"),
   cover: text("cover"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
@@ -35,6 +36,7 @@ const DDL = `
     tagline    text,
     intro      text,
     message    text,
+    body       text,
     cover      text,
     created_at timestamptz DEFAULT now(),
     updated_at timestamptz DEFAULT now()
@@ -48,6 +50,7 @@ const DDL = `
     updated_at timestamptz DEFAULT now()
   );
   ALTER TABLE page ADD COLUMN IF NOT EXISTS tagline text;
+  ALTER TABLE page ADD COLUMN IF NOT EXISTS body text;
 `;
 
 const client = new PGlite("idb://better-content");
@@ -65,12 +68,22 @@ async function seed(): Promise<void> {
   }
 }
 
+// Cards are left out: a missing one is a row the visitor deleted.
+async function seedMissingPage(): Promise<void> {
+  for (const { id, ...fields } of seedItems.page as Item[]) {
+    if (!(await adapter.fetchById("page", id))) {
+      await adapter.createWithId("page", id, fields);
+    }
+  }
+}
+
 export async function init(): Promise<void> {
   await client.exec(DDL);
   const existing = await client.query<{ n: number }>(
     "SELECT count(*)::int AS n FROM page",
   );
   if ((existing.rows[0]?.n ?? 0) === 0) await seed();
+  else await seedMissingPage();
 }
 
 export async function reset(): Promise<void> {
