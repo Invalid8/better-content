@@ -1,6 +1,6 @@
 {
   "name": "better-content",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Framework-neutral, own-your-data, adapter-driven inline-edit CMS engine.",
   "license": "MIT",
   "type": "module",
@@ -17,84 +17,213 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./core": {
-      "types": "./dist/core.d.ts",
-      "import": "./dist/core.js",
-      "require": "./dist/core.cjs"
+      "import": {
+        "types": "./dist/core.d.ts",
+        "default": "./dist/core.js"
+      },
+      "require": {
+        "types": "./dist/core.d.cts",
+        "default": "./dist/core.cjs"
+      }
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": {
+        "types": "./dist/server.d.cts",
+        "default": "./dist/server.cjs"
+      }
     },
     "./adapters/postgres": {
-      "types": "./dist/adapters/postgres.d.ts",
-      "import": "./dist/adapters/postgres.js",
-      "require": "./dist/adapters/postgres.cjs"
+      "import": {
+        "types": "./dist/adapters/postgres.d.ts",
+        "default": "./dist/adapters/postgres.js"
+      },
+      "require": {
+        "types": "./dist/adapters/postgres.d.cts",
+        "default": "./dist/adapters/postgres.cjs"
+      }
     },
     "./adapters/firestore": {
-      "types": "./dist/adapters/firestore.d.ts",
-      "import": "./dist/adapters/firestore.js",
-      "require": "./dist/adapters/firestore.cjs"
+      "import": {
+        "types": "./dist/adapters/firestore.d.ts",
+        "default": "./dist/adapters/firestore.js"
+      },
+      "require": {
+        "types": "./dist/adapters/firestore.d.cts",
+        "default": "./dist/adapters/firestore.cjs"
+      }
     },
     "./storage/cloudinary": {
-      "types": "./dist/storage/cloudinary.d.ts",
-      "import": "./dist/storage/cloudinary.js",
-      "require": "./dist/storage/cloudinary.cjs"
+      "import": {
+        "types": "./dist/storage/cloudinary.d.ts",
+        "default": "./dist/storage/cloudinary.js"
+      },
+      "require": {
+        "types": "./dist/storage/cloudinary.d.cts",
+        "default": "./dist/storage/cloudinary.cjs"
+      }
     },
     "./storage/cloudinary/server": {
-      "types": "./dist/storage/cloudinary/server.d.ts",
-      "import": "./dist/storage/cloudinary/server.js",
-      "require": "./dist/storage/cloudinary/server.cjs"
+      "import": {
+        "types": "./dist/storage/cloudinary/server.d.ts",
+        "default": "./dist/storage/cloudinary/server.js"
+      },
+      "require": {
+        "types": "./dist/storage/cloudinary/server.d.cts",
+        "default": "./dist/storage/cloudinary/server.cjs"
+      }
     },
     "./auth/firebase": {
-      "types": "./dist/auth/firebase.d.ts",
-      "import": "./dist/auth/firebase.js",
-      "require": "./dist/auth/firebase.cjs"
+      "import": {
+        "types": "./dist/auth/firebase.d.ts",
+        "default": "./dist/auth/firebase.js"
+      },
+      "require": {
+        "types": "./dist/auth/firebase.d.cts",
+        "default": "./dist/auth/firebase.cjs"
+      }
     },
     "./auth/firebase/client": {
-      "types": "./dist/auth/firebase/client.d.ts",
-      "import": "./dist/auth/firebase/client.js",
-      "require": "./dist/auth/firebase/client.cjs"
+      "import": {
+        "types": "./dist/auth/firebase/client.d.ts",
+        "default": "./dist/auth/firebase/client.js"
+      },
+      "require": {
+        "types": "./dist/auth/firebase/client.d.cts",
+        "default": "./dist/auth/firebase/client.cjs"
+      }
     },
     "./auth/google": {
-      "types": "./dist/auth/google.d.ts",
-      "import": "./dist/auth/google.js",
-      "require": "./dist/auth/google.cjs"
+      "import": {
+        "types": "./dist/auth/google.d.ts",
+        "default": "./dist/auth/google.js"
+      },
+      "require": {
+        "types": "./dist/auth/google.d.cts",
+        "default": "./dist/auth/google.cjs"
+      }
     },
     "./auth/google/client": {
-      "types": "./dist/auth/google/client.d.ts",
-      "import": "./dist/auth/google/client.js",
-      "require": "./dist/auth/google/client.cjs"
+      "import": {
+        "types": "./dist/auth/google/client.d.ts",
+        "default": "./dist/auth/google/client.js"
+      },
+      "require": {
+        "types": "./dist/auth/google/client.d.cts",
+        "default": "./dist/auth/google/client.cjs"
+      }
     },
     "./devtools": {
-      "types": "./dist/devtools.d.ts",
-      "import": "./dist/devtools.js",
-      "require": "./dist/devtools.cjs"
+      "import": {
+        "types": "./dist/devtools.d.ts",
+        "default": "./dist/devtools.js"
+      },
+      "require": {
+        "types": "./dist/devtools.d.cts",
+        "default": "./dist/devtools.cjs"
+      }
     },
     "./devtools/react": {
-      "types": "./dist/devtools/react.d.ts",
-      "import": "./dist/devtools/react.js",
-      "require": "./dist/devtools/react.cjs"
+      "import": {
+        "types": "./dist/devtools/react.d.ts",
+        "default": "./dist/devtools/react.js"
+      },
+      "require": {
+        "types": "./dist/devtools/react.d.cts",
+        "default": "./dist/devtools/react.cjs"
+      }
     },
     "./svelte": {
-      "types": "./dist/svelte.d.ts",
-      "import": "./dist/svelte.js",
-      "require": "./dist/svelte.cjs"
+      "import": {
+        "types": "./dist/svelte.d.ts",
+        "default": "./dist/svelte.js"
+      },
+      "require": {
+        "types": "./dist/svelte.d.cts",
+        "default": "./dist/svelte.cjs"
+      }
     },
     "./vue": {
-      "types": "./dist/vue.d.ts",
-      "import": "./dist/vue.js",
-      "require": "./dist/vue.cjs"
+      "import": {
+        "types": "./dist/vue.d.ts",
+        "default": "./dist/vue.js"
+      },
+      "require": {
+        "types": "./dist/vue.d.cts",
+        "default": "./dist/vue.cjs"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "core": [
+        "./dist/core.d.ts"
+      ],
+      "react": [
+        "./dist/react.d.ts"
+      ],
+      "server": [
+        "./dist/server.d.ts"
+      ],
+      "adapters/postgres": [
+        "./dist/adapters/postgres.d.ts"
+      ],
+      "adapters/firestore": [
+        "./dist/adapters/firestore.d.ts"
+      ],
+      "storage/cloudinary": [
+        "./dist/storage/cloudinary.d.ts"
+      ],
+      "storage/cloudinary/server": [
+        "./dist/storage/cloudinary/server.d.ts"
+      ],
+      "auth/firebase": [
+        "./dist/auth/firebase.d.ts"
+      ],
+      "auth/firebase/client": [
+        "./dist/auth/firebase/client.d.ts"
+      ],
+      "auth/google": [
+        "./dist/auth/google.d.ts"
+      ],
+      "auth/google/client": [
+        "./dist/auth/google/client.d.ts"
+      ],
+      "devtools": [
+        "./dist/devtools.d.ts"
+      ],
+      "devtools/react": [
+        "./dist/devtools/react.d.ts"
+      ],
+      "svelte": [
+        "./dist/svelte.d.ts"
+      ],
+      "vue": [
+        "./dist/vue.d.ts"
+      ]
     }
   },
   "peerDependencies": {
@@ -127,7 +256,7 @@
       "optional": true
     },
     "vue": {
-      "optional": "true"
+      "optional": true
     },
     "@react-oauth/google": {
       "optional": true
