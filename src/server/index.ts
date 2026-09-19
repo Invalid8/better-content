@@ -43,5 +43,4 @@ export type {
   Ref,
   RelationConfig,
   ServerStorageAdapter,
-  StorageAdapter,
 } from "better-content/core";

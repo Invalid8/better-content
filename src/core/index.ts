@@ -18,10 +18,9 @@ export type {
   Ref,
   RelationConfig,
   ServerStorageAdapter,
-  StorageAdapter,
 } from "./types";
 export { fetchItemMap, type FetchItemMapOptions } from "./content";
-export { dirtyKey, getPath, isFilterGroup, setPath } from "./helpers";
+export { getPath, isFilterGroup, setPath } from "./helpers";
 export { consoleNotifier, type Notifier } from "./notifier";
 export {
   adapterTransport,

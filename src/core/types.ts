@@ -129,6 +129,3 @@ export interface ServerStorageAdapter {
   sign(req: Request): Promise<unknown>;
 }
 
-export interface StorageAdapter extends ClientStorageAdapter {
-  sign?(req: Request): Promise<unknown>;
-}

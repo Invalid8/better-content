@@ -1,10 +1,7 @@
 import { generateKeyPairSync, createSign, type KeyObject } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  googleAuth,
-  resetGoogleKeyCache,
-  verifyGoogleIdToken,
-} from "../src/auth/google";
+import { googleAuth, verifyGoogleIdToken } from "../src/auth/google";
+import { resetGoogleKeyCache } from "../src/auth/google/jwks";
 
 const CLIENT_ID = "1234.apps.googleusercontent.com";
 const KID = "test-key";

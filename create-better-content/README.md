@@ -100,7 +100,7 @@ that touch your data are three small modules you can read in a minute.
 
 ## Requirements
 
-Node 18 or newer. The CLI itself has zero dependencies.
+Node 20 or newer. The CLI itself has zero dependencies.
 
 MIT. Part of the [better-content](https://github.com/Invalid8/better-content)
 project.

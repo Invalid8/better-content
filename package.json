@@ -1,12 +1,12 @@
 {
   "name": "better-content",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Framework-neutral, own-your-data, adapter-driven inline-edit CMS engine.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "files": [
     "dist",

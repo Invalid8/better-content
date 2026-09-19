@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-09-19
+
+The subtraction release before 1.0. Breaking changes are free now and permanent
+after 1.0, so everything reachable that should not have been is going now. All
+of it came out of a pass over the built types rather than the source, since the
+built types are what a consumer actually gets.
+
+### Removed
+
+- **`StorageAdapter`.** A third spelling of the storage seam, exported from
+  `core` and `server`, referenced nowhere in the implementation and in no
+  documentation. Its optional `sign` contradicted the client/server split that
+  exists so server SDKs stay out of client bundles. Use `ClientStorageAdapter`
+  (one method, `upload`) and `ServerStorageAdapter` (one method, `sign`), which
+  is what every shipped provider and every doc page already used.
+
+- **`dirtyKey` from `better-content/core`.** It returns `"collection:id"`, the
+  engine's internal dirty-set key, and exporting it meant that format could
+  never change without a major bump. Nothing but the engine used it.
+  `setPath` and `getPath` are unaffected.
+
+- **`PageContext` from `better-content/react`.** The raw React context object
+  leaked into the public surface and pinned the two-context design (a snapshot
+  context plus a stable engine context) as API. Read the context through
+  `usePageContext`, `useCmsItem` or `useCmsEngine`. `PageContextValue` is still
+  exported as a type, and `CmsAuthContext` is still exported deliberately, for
+  composing your own auth provider.
+
+- **`resetGoogleKeyCache` from `better-content/auth/google`.** A test hook, and
+  its own docstring said so. Shipping it made JWKS cache invalidation a
+  supported feature. The cache moved to an internal module; production honours
+  Google's `cache-control` as before.
+
+### Changed
+
+- **`engines.node` is now `>=20`.** Node 18 left maintenance in April 2025, so
+  the old floor claimed support that was not being tested.
+
+### Migration
+
+Each removal is one edit, and the type checker finds every site:
+
+| Was | Now |
+|---|---|
+| `StorageAdapter` | `ClientStorageAdapter` or `ServerStorageAdapter` |
+| `dirtyKey(collection, id)` | `` `${collection}:${id}` `` in your own code, if you really need it |
+| `useContext(PageContext)` | `usePageContext()` |
+| `resetGoogleKeyCache()` | nothing; the cache expires on Google's `max-age` |
+
+Nothing else changed. No behaviour, no signatures, no new API.
+
 ## [0.9.1] - 2026-09-19
 
 ### Fixed
@@ -477,6 +528,7 @@ protecting them.
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.10.0]: https://github.com/Invalid8/better-content/releases/tag/v0.10.0
 [0.9.1]: https://github.com/Invalid8/better-content/releases/tag/v0.9.1
 [0.9.0]: https://github.com/Invalid8/better-content/releases/tag/v0.9.0
 [0.8.1]: https://github.com/Invalid8/better-content/releases/tag/v0.8.1

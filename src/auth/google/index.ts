@@ -1,5 +1,6 @@
 import { createPublicKey, createVerify } from "node:crypto";
 import type { AuthAdapter, AuthIdentity } from "better-content/core";
+import { getSigningKey } from "./jwks";
 
 /**
  * Server auth adapter backed by **Google Identity Services** ID tokens: the
@@ -13,42 +14,7 @@ import type { AuthAdapter, AuthIdentity } from "better-content/core";
  * dependency.
  */
 
-const GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 const GOOGLE_ISSUERS = ["https://accounts.google.com", "accounts.google.com"];
-
-/** A Google JWKS entry (RSA public key in JWK form). */
-interface GoogleJwk {
-  kid: string;
-  kty: string;
-  n: string;
-  e: string;
-  alg?: string;
-  use?: string;
-}
-
-let keyCache: { keys: Map<string, GoogleJwk>; expiresAt: number } | null = null;
-
-/** Fetch (and cache, honouring `cache-control: max-age`) Google's signing keys. */
-async function getSigningKey(kid: string): Promise<GoogleJwk | null> {
-  const now = Date.now();
-  if (!keyCache || now >= keyCache.expiresAt) {
-    const res = await fetch(GOOGLE_CERTS_URL);
-    if (!res.ok) throw new Error(`Google JWKS fetch failed: ${res.status}`);
-    const body = (await res.json()) as { keys: GoogleJwk[] };
-    const keys = new Map(body.keys.map((k) => [k.kid, k]));
-    const maxAge = /max-age=(\d+)/.exec(res.headers.get("cache-control") ?? "");
-    keyCache = {
-      keys,
-      expiresAt: now + (maxAge ? Number(maxAge[1]) * 1000 : 3_600_000),
-    };
-  }
-  return keyCache.keys.get(kid) ?? null;
-}
-
-/** Drops the cached JWKS. Exported for tests; production honours max-age. */
-export function resetGoogleKeyCache(): void {
-  keyCache = null;
-}
 
 function b64urlToBuffer(input: string): Buffer {
   return Buffer.from(input.replace(/-/g, "+").replace(/_/g, "/"), "base64");
