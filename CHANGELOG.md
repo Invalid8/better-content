@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-09-19
+
+### Fixed
+
+- **CommonJS consumers were handed ESM type declarations.** The build has
+  always emitted a `.d.cts` beside each `.d.ts` and shipped both, but the
+  `exports` map named one `types` file per entry and served it to `require` as
+  well. TypeScript on `moduleResolution: node16` or `nodenext` therefore
+  resolved an ESM declaration file for a CommonJS build and reported the
+  import as an error. Each entry now carries its own `types` under `import`
+  and under `require`.
+
+- **Subpath exports resolved to no types at all under classic node
+  resolution.** `moduleResolution: node` does not read the `exports` map and
+  the package shipped no `typesVersions` fallback, so `better-content/core`,
+  `/react`, `/server` and every other subpath came back untyped; only the root
+  entry worked. A `typesVersions` map now points each subpath at its
+  declaration file.
+
+- `peerDependenciesMeta.vue.optional` was the string `"true"` where every
+  other peer used the boolean. Truthy either way today, wrong against the
+  schema, and one strict installer away from treating `vue` as required.
+
+No JavaScript changed. Bundler and ESM consumers were unaffected, which is why
+this reached 0.9.0 unnoticed. `@arethetypeswrong/cli` now reports no problems
+across all sixteen entries in node10, node16 from CJS, node16 from ESM and
+bundler.
+
 ## [0.9.0] - 2026-09-06
 
 ### Changed
@@ -449,6 +477,7 @@ protecting them.
   with claim + allowlist gating; client provider with forced sign-out on
   401 `{ logout: true }`.
 
+[0.9.1]: https://github.com/Invalid8/better-content/releases/tag/v0.9.1
 [0.9.0]: https://github.com/Invalid8/better-content/releases/tag/v0.9.0
 [0.8.1]: https://github.com/Invalid8/better-content/releases/tag/v0.8.1
 [0.8.0]: https://github.com/Invalid8/better-content/releases/tag/v0.8.0
