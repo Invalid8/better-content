@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/Invalid8/better-content/actions/workflows/ci.yml/badge.svg)](https://github.com/Invalid8/better-content/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/better-content)](https://www.npmjs.com/package/better-content)
+[![Sponsor](https://img.shields.io/github/sponsors/Invalid8?label=Sponsor&logo=GitHub-Sponsors)](https://github.com/sponsors/Invalid8)
 
 Own-your-data, adapter-driven, framework-agnostic inline-edit CMS engine. MIT.
 
