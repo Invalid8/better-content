@@ -75,6 +75,43 @@ Details worth knowing:
 Peers: `drizzle-orm` (always) and `pg` (only for pool/connection-string
 usage).
 
+### Hosting the database
+
+Any Postgres works. If you would rather not run one yourself, we recommend
+[Neon](https://neon.tech): managed, serverless Postgres with a free tier,
+which suits a CMS whose writes come in bursts when someone is editing.
+
+Create a project, copy its connection string into `DATABASE_URL`, and the
+adapter works as-is through `pg`:
+
+```ts
+const data = new PostgresDataAdapter({
+  connectionString: process.env.DATABASE_URL,
+  schema: { posts },
+});
+```
+
+On serverless or edge runtimes, skip `pg` and hand the adapter a Drizzle
+`db` built on Neon's HTTP driver instead:
+
+```sh
+npm install @neondatabase/serverless
+```
+
+```ts
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+
+const data = new PostgresDataAdapter({
+  db: drizzle(neon(process.env.DATABASE_URL!)),
+  schema: { posts },
+});
+```
+
+Neon branches are a good fit for previews: point each preview deployment at
+its own branch and editors can try content changes without touching
+production rows.
+
 ## Firestore
 
 ```ts
