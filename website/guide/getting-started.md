@@ -142,6 +142,10 @@ export const { GET, PATCH, PUT, DELETE } = createCmsHandlers({
 });
 ```
 
+`DATABASE_URL` can point at any Postgres. If you don't want to run one, a
+free [Neon](https://neon.tech) database is the quickest route; see
+[hosting the database](/guide/adapters#hosting-the-database).
+
 Any runtime with web-standard `Request`/`Response` works the same way. The
 handlers gate every write through your `AuthAdapter`; see
 [auth](/guide/auth).
