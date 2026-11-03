@@ -97,6 +97,7 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/Invalid8/better-content" },
       { icon: "npm", link: "https://www.npmjs.com/package/better-content" },
+      { icon: "githubsponsors", link: "https://github.com/sponsors/Invalid8", ariaLabel: "Sponsor" },
     ],
     search: { provider: "local" },
     footer: {
