@@ -192,6 +192,14 @@ Svelte islands editing one shared engine, persisted to Postgres running in
 the browser (PGlite), with swappable adapters. `npm run dev` there runs it
 with zero external services.
 
+## Supported by
+
+<a href="https://neon.com"><img src="https://raw.githubusercontent.com/Invalid8/better-content/main/assets/neon-logo.svg" alt="Neon" width="200" /></a>
+
+[Neon](https://neon.com) supports better-content through its Open Source
+Program. It's also our recommended managed Postgres for the
+[Postgres adapter](https://better-content-docs.vercel.app/guide/adapters#hosting-the-database).
+
 ## License & positioning
 
 MIT. **Independent project** — not affiliated with better-auth or the better-*
